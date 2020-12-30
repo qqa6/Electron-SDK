@@ -87,13 +87,19 @@ class VideoFrameInfo
 public:
     NodeRenderType m_renderType;
     agora::rtc::uid_t m_uid;
-    buffer_list m_bufferList;
-    stream_buffer_type m_buffer;
     uint32_t m_destWidth;
     uint32_t m_destHeight;
     bool m_needUpdate;
     uint32_t m_count;
     std::string m_channelId;
+    unsigned char* m_ybuffer = nullptr;
+    unsigned char* m_ubuffer = nullptr;
+    unsigned char* m_vbuffer = nullptr;
+    unsigned char* m_headbuffer = nullptr;
+    int m_videoWidth = 0;
+    int m_videoHeight = 0;
+    int m_videoStride = 0;
+    bool m_videoSizeChanged = false;
     VideoFrameInfo()
         : m_renderType(NODE_RENDER_TYPE_REMOTE)
         , m_uid(0)
@@ -137,6 +143,8 @@ class NodeVideoFrameTransporter {
     void removeFromeHighVideo(agora::rtc::uid_t uid, std::string channelId);
     void setHighFPS(uint32_t fps);
     void setFPS(uint32_t fps);
+    void updateVideoBuffer(unsigned char* ybuffer, unsigned char* ubuffer, unsigned char* vbuffer, unsigned char* hbuffer, NodeRenderType type, agora::rtc::uid_t uid, std::string channelId);
+    void clearVideoBuffer(NodeRenderType type, agora::rtc::uid_t uid, std::string channelId);
     //bool deliveryFrame1(enum NodeRenderType type, agora::rtc::uid_t uid, const buffer_list& buffers);
 private:
 
@@ -163,28 +171,23 @@ private:
     };
     VideoFrameInfo& getVideoFrameInfo(NodeRenderType type, agora::rtc::uid_t uid, std::string channelId);
     bool deinitialize();
-    VideoFrameInfo& getHighVideoFrameInfo(agora::rtc::uid_t uid, std::string channelId);
     void setupFrameHeader(image_header_type*header, int stride, int width, int height);
-    void copyFrame(const agora::media::IVideoFrame& videoFrame, VideoFrameInfo& info, int dest_stride, int src_stride, int width, int height);
+    void copyFrame(const agora::media::IVideoFrame& videoFrame, VideoFrameInfo& info);
     void copyAndCentreYuv(const unsigned char* srcYPlane, const unsigned char* srcUPlane, const unsigned char* srcVPlane, int width, int height, int srcStride,
     unsigned char* dstYPlane, unsigned char* dstUPlane, unsigned char* dstVPlane, int dstStride);
     void FlushVideo();
-    void highFlushVideo();
 private:
     bool init;
     Isolate* env;
     Persistent<Function> callback;
     Persistent<Object> js_this;
     std::unordered_map<std::string, std::unordered_map<agora::rtc::uid_t, VideoFrameInfo>> m_remoteVideoFrames;
-    std::unordered_map<std::string, std::unordered_map<agora::rtc::uid_t, VideoFrameInfo>> m_remoteHighVideoFrames;
     std::unique_ptr<VideoFrameInfo> m_localVideoFrame;
     std::unique_ptr<VideoFrameInfo> m_devTestVideoFrame;
     std::unique_ptr<VideoFrameInfo> m_videoSourceVideoFrame;
     std::mutex m_lock;
     int m_stopFlag;
     std::unique_ptr<std::thread> m_thread;
-    std::unique_ptr<std::thread> m_highThread;
-    uint32_t m_highFPS;
     uint32_t m_FPS;
 };
 

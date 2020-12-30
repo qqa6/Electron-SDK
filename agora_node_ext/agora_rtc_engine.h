@@ -356,6 +356,9 @@ namespace agora {
             NAPI_API(setVoiceBeautifierPreset);
             NAPI_API(setAudioEffectParameters);
             NAPI_API(setClientRoleWithOptions);
+
+            NAPI_API(updateVideoBuffer);
+            NAPI_API(clearVideoBuffer);
             
         public:
             Isolate* getIsolate() { return m_isolate; }

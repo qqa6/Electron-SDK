@@ -65,7 +65,21 @@ import {
   PluginInfo,
   Plugin
 } from './plugin';
+import { Stream } from 'stream';
 const agora = require('../../build/Release/agora_node_ext');
+
+class StreamData {
+  ybuffer: Buffer | undefined;
+  ubuffer: Buffer | undefined;
+  vbuffer: Buffer | undefined;
+  hbuffer: Buffer | undefined;
+  constructor() {
+    this.ybuffer = undefined;
+    this.ubuffer = undefined;
+    this.vbuffer = undefined;
+    this.hbuffer = undefined;
+  }
+}
 
 /**
  * The AgoraRtcEngine class.
@@ -73,6 +87,7 @@ const agora = require('../../build/Release/agora_node_ext');
 class AgoraRtcEngine extends EventEmitter {
   rtcEngine: NodeRtcEngine;
   streams: Map<string, Map<string, IRenderer[]>>;
+  streamBuffers: Map<string, Map<string, StreamData>>;
   renderMode: 1 | 2 | 3;
   customRenderer: any;
   constructor() {
@@ -80,6 +95,7 @@ class AgoraRtcEngine extends EventEmitter {
     this.rtcEngine = new agora.NodeRtcEngine();
     this.initEventHandler();
     this.streams = new Map();
+    this.streamBuffers = new Map();
     this.renderMode = this._checkWebGL() ? 1 : 2;
     this.customRenderer = CustomRenderer;
   }
@@ -782,6 +798,82 @@ class AgoraRtcEngine extends EventEmitter {
   }
 
   /**
+   * @private
+   * @ignore
+   * @param {number} type 0-local 1-remote 2-device_test 3-video_source
+   * @param {number} uid uid get from native engine, differ from electron engine's uid
+   */ //TODO(input)
+  _getStreamData(type: number, uid: number, channelId: string): StreamData | undefined {
+    let channelStreamData = this._getChannelStreamData(channelId);
+    if (type < 2) {
+      if (uid === 0) {
+        return this._getOrCreateStreamData(channelStreamData, 'local');
+      } else {
+        return this._getOrCreateStreamData(channelStreamData, String(uid));
+      }
+    } else if (type === 2) {
+      console.warn('Type 2 not support in production mode.');
+      return;
+    } else if (type === 3) {
+      return this._getOrCreateStreamData(channelStreamData, 'videosource');
+    } else {
+      console.warn('Invalid type for getRenderer, only accept 0~3.');
+      return;
+    }
+  }
+
+  _destroyStreamData(
+    key: 'local' | 'videosource' | number, channelId: string | undefined) {
+      let channelStreamData = this._getChannelStreamData(channelId || "")
+      if (!channelStreamData.has(String(key))) {
+        return;
+      }
+
+      if (key === 'local') {
+        this._clearVideoBuffer(0, 0, channelId || "");
+      } else if (key === 'videosource') {
+        this._clearVideoBuffer(3, 0, channelId || "");
+      } else if (typeof(key) === 'number') {
+        this._clearVideoBuffer(1, key, channelId || "");
+      }
+
+      let streamData = channelStreamData.get(String(key)) as StreamData;
+      streamData.ybuffer = undefined;
+      streamData.ubuffer = undefined;
+      streamData.vbuffer = undefined;
+      streamData.hbuffer = undefined;
+
+      channelStreamData.delete(String(key));
+
+      if (channelStreamData.size === 0) {
+        this.streamBuffers.delete(channelId || "");
+      }
+  }
+
+  //TODO(input)
+  _getChannelStreamData(channelId: string): Map<string, StreamData> {
+    let channel: Map<string, StreamData>;
+    if (!this.streamBuffers.has(channelId)) {
+      channel = new Map();
+      this.streamBuffers.set(channelId, channel);
+    } else {
+      channel = this.streamBuffers.get(channelId) as Map<string, StreamData>;
+    }
+    return channel;
+  }
+
+  _getOrCreateStreamData(channelStreamData:Map<string, StreamData>, key: string): StreamData {
+    let streamData: StreamData;
+    if (!channelStreamData.has(key)) {
+      streamData = new StreamData();
+      channelStreamData.set(key, streamData);
+    } else {
+      streamData = channelStreamData.get(key) as StreamData;
+    }
+    return streamData;
+  }
+
+  /**
    * check if data is valid
    * @private
    * @ignore
@@ -836,36 +928,46 @@ class AgoraRtcEngine extends EventEmitter {
     const len = infos.length;
     for (let i = 0; i < len; i++) {
       const info = infos[i];
-      const { type, uid, channelId, header, ydata, udata, vdata } = info;
-      if (!header || !ydata || !udata || !vdata) {
-        console.log(
-          'Invalid data param ： ' +
-            header +
-            ' ' +
-            ydata +
-            ' ' +
-            udata +
-            ' ' +
-            vdata
-        );
-        continue;
-      }
+      const { type, uid, width, height, stride, videoSizeChanged, channelId} = info;
+
       const renderers = this._getRenderers(type, uid, channelId);
       if (!renderers || renderers.length === 0) {
         console.warn(`Can't find renderer for uid : ${uid} ${channelId}`);
         continue;
       }
 
-      if (this._checkData(header, ydata, udata, vdata)) {
+      let streamData = this._getStreamData(type, uid, channelId) as StreamData;
+      if (videoSizeChanged) {
+        let yBufferSize = stride * height;
+        if (yBufferSize % 4 != 0) {
+          console.error(
+            'invalid buffer size, ystide ' +
+              stride +
+              ' height ' +
+              height +
+              ' stride x height must be mod 4'
+          );
+          continue;
+        }
+
+        streamData.ybuffer = Buffer.alloc(yBufferSize, 0);
+        streamData.ubuffer = Buffer.alloc(yBufferSize / 4, 128);
+        streamData.vbuffer = Buffer.alloc(yBufferSize / 4, 128);
+        streamData.hbuffer = Buffer.alloc(20);
+        this._updateVideoBuffer(streamData.ybuffer, streamData.ubuffer, streamData.vbuffer, streamData.hbuffer, type, uid, channelId);
+        continue;
+      }
+
+      // if (this._checkData(header, ydata, udata, vdata)) {
         renderers.forEach(renderer => {
           renderer.drawFrame({
-            header,
-            yUint8Array: ydata,
-            uUint8Array: udata,
-            vUint8Array: vdata
+            header: streamData.hbuffer?.buffer,
+            yUint8Array: streamData.ybuffer,
+            uUint8Array: streamData.ubuffer,
+            vUint8Array: streamData.vbuffer
           });
         })
-      }
+      // }
     }
   }
 
@@ -932,6 +1034,7 @@ class AgoraRtcEngine extends EventEmitter {
     } else {
       let renderers = channelStreams.get(String(key)) || []
       renderers.push(renderer)
+      console.log(`renderers lenght: ${renderers.length}`);
       channelStreams.set(String(key), renderers)
     }
   }
@@ -981,6 +1084,8 @@ class AgoraRtcEngine extends EventEmitter {
     key: 'local' | 'videosource' | number, channelId: string | undefined,
     onFailure?: (err: Error) => void
   ) {
+    this._destroyStreamData(key, channelId);
+
     let channelStreams = this._getChannelRenderers(channelId || "")
     if (!channelStreams.has(String(key))) {
       return;
@@ -5418,6 +5523,30 @@ class AgoraRtcEngine extends EventEmitter {
    */
   setAudioEffectParameters(preset: AUDIO_EFFECT_PRESET, param1: number, param2: number): number {
     return this.rtcEngine.setAudioEffectParameters(preset, param1, param2);
+  }
+
+  /**
+   * Private Interfaces.
+   * @ignore
+   */
+  _updateVideoBuffer(
+    ybuffer: Buffer, 
+    ubuffer: Buffer, 
+    vbuffer: Buffer, 
+    hbuffer: Buffer, 
+    renderType: number, 
+    uid: number, 
+    channel: string
+  ):number {
+    return this.rtcEngine.updateVideoBuffer(ybuffer, ubuffer, vbuffer, hbuffer, renderType, uid, channel);
+  }
+
+  /**
+   * Private Interfaces.
+   * @ignore
+   */
+  _clearVideoBuffer(renderType: number, uid: number, channel: string): number {
+    return this.rtcEngine.clearVideoBuffer(renderType, uid, channel);
   }
 
 }

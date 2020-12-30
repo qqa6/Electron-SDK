@@ -298,6 +298,10 @@ namespace agora {
                 PROPERTY_METHOD_DEFINE(setAudioEffectParameters);
                 PROPERTY_METHOD_DEFINE(setClientRoleWithOptions);
 
+                PROPERTY_METHOD_DEFINE(updateVideoBuffer);
+                PROPERTY_METHOD_DEFINE(clearVideoBuffer);
+                
+
             EN_PROPERTY_DEFINE()
             module->Set(context, Nan::New<v8::String>("NodeRtcEngine").ToLocalChecked(), tpl->GetFunction(context).ToLocalChecked());
         }
@@ -477,6 +481,112 @@ namespace agora {
         NAPI_API_DEFINE_WRAPPER_SET_PARAMETER_1(enableWebSdkInteroperability, bool);
 
         NAPI_API_DEFINE_WRAPPER_SET_PARAMETER_1(setVideoQualityParameters, bool);
+
+        NAPI_API_DEFINE(NodeRtcEngine, updateVideoBuffer)
+        {
+            LOG_ENTER;
+            int result = -1;
+            std::string key = "";
+            do {
+                NodeRtcEngine *pEngine = nullptr;
+                Isolate* isolate = args.GetIsolate();
+                Local<Context> context = isolate->GetCurrentContext();
+                napi_get_native_this(args, pEngine);
+                CHECK_NATIVE_THIS(pEngine);
+                napi_status status;
+
+                Local<Object> obj;
+                key = "arg 0 is not a object";
+                status = napi_get_value_object_(isolate, args[0], obj);
+                CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
+                unsigned char* ybuffer = (unsigned char*) node::Buffer::Data(obj);
+
+                Local<Object> obj1;
+                key = "arg 1 is not a object";
+                status = napi_get_value_object_(isolate, args[1], obj1);
+                CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
+                unsigned char* ubuffer = (unsigned char*) node::Buffer::Data(obj1);
+
+                Local<Object> obj2;
+                key = "arg 2 is not a object";
+                status = napi_get_value_object_(isolate, args[2], obj2);
+                CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
+                unsigned char* vbuffer = (unsigned char*) node::Buffer::Data(obj2);
+
+                Local<Object> obj3;
+                key = "arg 3 is not a object";
+                status = napi_get_value_object_(isolate, args[3], obj3);
+                CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
+                unsigned char* hbuffer = (unsigned char*) node::Buffer::Data(obj3);
+
+                int renderType = 0;
+                status = napi_get_value_int32_(args[4], renderType);
+                key = "renderType";
+                CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
+
+                uid_t uid;
+                status = NodeUid::getUidFromNodeValue(args[5], uid);
+                key = "uid";
+                CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
+
+                nodestring channelId;
+                status = napi_get_value_nodestring_(args[6], channelId);
+                key = "channelId";
+                CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
+
+                std::string sChannelId = channelId ? std::string(channelId) : "";
+
+                auto *pTransporter = getNodeVideoFrameTransporter();
+                if (pTransporter) {
+                    pTransporter->updateVideoBuffer(ybuffer, ubuffer, vbuffer, hbuffer, (NodeRenderType)renderType, uid, sChannelId);
+                    result = 0;
+                }
+
+            } while (false);
+            napi_set_int_result(args, result);
+            LOG_LEAVE;
+        }
+
+        NAPI_API_DEFINE(NodeRtcEngine, clearVideoBuffer)
+        {
+            LOG_ENTER;
+            int result = -1;
+            std::string key = "";
+            do {
+                NodeRtcEngine *pEngine = nullptr;
+                Isolate* isolate = args.GetIsolate();
+                Local<Context> context = isolate->GetCurrentContext();
+                napi_get_native_this(args, pEngine);
+                CHECK_NATIVE_THIS(pEngine);
+                napi_status status;
+
+                int renderType = 0;
+                status = napi_get_value_int32_(args[0], renderType);
+                key = "renderType";
+                CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
+
+                uid_t uid;
+                status = NodeUid::getUidFromNodeValue(args[1], uid);
+                key = "uid";
+                CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
+
+                nodestring channelId;
+                status = napi_get_value_nodestring_(args[2], channelId);
+                key = "channelId";
+                CHECK_NAPI_STATUS_PARAM(pEngine, status, key);
+
+                std::string sChannelId = channelId ? std::string(channelId) : "";
+
+                auto *pTransporter = getNodeVideoFrameTransporter();
+                if (pTransporter) {
+                    pTransporter->clearVideoBuffer((NodeRenderType)renderType, uid, sChannelId);
+                    result = 0;
+                }
+
+            } while (false);
+            napi_set_int_result(args, result);
+            LOG_LEAVE;
+        }
 
         NAPI_API_DEFINE(NodeRtcEngine, addPublishStreamUrl)
         {

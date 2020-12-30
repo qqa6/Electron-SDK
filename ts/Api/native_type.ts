@@ -3175,6 +3175,25 @@ export interface NodeRtcEngine {
    * @ignore
    */
   setRecordingAudioFrameParameters(sampleRate: number, channel: number, mode: number, samplesPerCall: number): number;
+
+  /**
+   * @ignore
+   */
+  updateVideoBuffer(
+    ybuffer: Buffer, 
+    ubuffer: Buffer, 
+    vbuffer: Buffer, 
+    hbuffer: Buffer, 
+    renderType: number, 
+    uid: number, 
+    channel: string
+  ):number;
+
+  /**
+   * Private Interfaces.
+   * @ignore
+   */
+  clearVideoBuffer(renderType: number, uid: number, channel: string): number;
 }
 /**
  * @ignore

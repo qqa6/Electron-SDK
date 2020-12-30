@@ -27,7 +27,6 @@ NodeVideoFrameTransporter* getNodeVideoFrameTransporter()
 NodeVideoFrameTransporter::NodeVideoFrameTransporter()
 : init(false)
 , env(nullptr)
-, m_highFPS(15)
 , m_FPS(10)
 {
     
@@ -48,7 +47,6 @@ bool NodeVideoFrameTransporter::initialize(v8::Isolate *isolate, const Nan::Func
     callback.Reset(callbackinfo[0].As<Function>());
     js_this.Reset(callbackinfo.This());
     m_thread.reset(new std::thread(&NodeVideoFrameTransporter::FlushVideo, this));
-    m_highThread.reset(new std::thread(&NodeVideoFrameTransporter::highFlushVideo, this));
     init = true;
     return true;
 }
@@ -60,10 +58,7 @@ bool NodeVideoFrameTransporter::deinitialize()
     m_stopFlag = 1;
     if (m_thread->joinable())
         m_thread->join();
-    if (m_highThread->joinable())
-        m_highThread->join();
     init = false;
-    m_highThread.reset();
     m_thread.reset();
     env = nullptr;
     callback.Reset();
@@ -76,17 +71,6 @@ int NodeVideoFrameTransporter::setVideoDimension(NodeRenderType type, agora::rtc
     if (!init)
         return -1;
     std::lock_guard<std::mutex> lck(m_lock);
-    if (type == NODE_RENDER_TYPE_REMOTE) {
-        auto cit = m_remoteHighVideoFrames.find(channelId);
-        if (cit != m_remoteHighVideoFrames.end()) {
-            auto it = cit->second.find(uid);
-            if (it != cit->second.end()) {
-                it->second.m_destWidth = width;
-                it->second.m_destHeight = height;
-                return 0;
-            }
-        }
-    }
     VideoFrameInfo& info = getVideoFrameInfo(type, uid, channelId);
     info.m_destWidth = width;
     info.m_destHeight = height;
@@ -101,15 +85,6 @@ VideoFrameInfo& NodeVideoFrameTransporter::getVideoFrameInfo(NodeRenderType type
         return *m_localVideoFrame.get();
     }
     else if (type == NODE_RENDER_TYPE_REMOTE) {
-        //try looking in high streams first
-        auto hcit = m_remoteHighVideoFrames.find(channelId);
-        if(hcit != m_remoteHighVideoFrames.end()){
-            auto hit = m_remoteHighVideoFrames[channelId].find(uid);
-            if (hit != m_remoteHighVideoFrames[channelId].end()) 
-                return m_remoteHighVideoFrames[channelId][uid];
-        }
-
-        //if not exists, try looking in low streams
         auto cit = m_remoteVideoFrames.find(channelId);
         if(cit == m_remoteVideoFrames.end()){
             m_remoteVideoFrames[channelId] = std::unordered_map<agora::rtc::uid_t, VideoFrameInfo>();
@@ -132,6 +107,29 @@ VideoFrameInfo& NodeVideoFrameTransporter::getVideoFrameInfo(NodeRenderType type
     }
 }
 
+void NodeVideoFrameTransporter::updateVideoBuffer(unsigned char* ybuffer, unsigned char* ubuffer, unsigned char* vbuffer, unsigned char* hbuffer, NodeRenderType type, agora::rtc::uid_t uid, std::string channelId)
+{
+    LOG_F(INFO, "updateVideoBuffer ");
+    VideoFrameInfo&  v = getVideoFrameInfo(type, uid, channelId);
+    v.m_ybuffer = ybuffer;
+    v.m_ubuffer = ubuffer;
+    v.m_vbuffer = vbuffer;
+    v.m_headbuffer = hbuffer;
+    v.m_videoSizeChanged = false;
+}
+
+void NodeVideoFrameTransporter::clearVideoBuffer(NodeRenderType type, agora::rtc::uid_t uid, std::string channelId)
+{
+    std::lock_guard<std::mutex> lck(m_lock);
+    LOG_F(INFO, "clearVideoBuffer ");
+    VideoFrameInfo&  v = getVideoFrameInfo(type, uid, channelId);
+    v.m_ybuffer = nullptr;
+    v.m_ubuffer = nullptr;
+    v.m_vbuffer = nullptr;
+    v.m_headbuffer = nullptr;
+    v.m_videoSizeChanged = false;
+}
+
 int NodeVideoFrameTransporter::deliverVideoSourceFrame(const char* payload, int len)
 {
     if (!init)
@@ -143,14 +141,28 @@ int NodeVideoFrameTransporter::deliverVideoSourceFrame(const char* payload, int 
     char* u = y + uv_len * 4;
     char* v = u + uv_len;
     std::lock_guard<std::mutex> lck(m_lock);
+
     VideoFrameInfo& videoInfo = getVideoFrameInfo(NODE_RENDER_TYPE_VIDEO_SOURCE, 0, "");
+    if (videoInfo.m_videoSizeChanged) {
+        return 0;
+    }
     int destWidth = videoInfo.m_destWidth ? videoInfo.m_destWidth : info->width;
     int destHeight = videoInfo.m_destHeight ? videoInfo.m_destHeight : info->height;
-    size_t imageSize = sizeof(image_header_type) + destWidth * destHeight * 3 / 2;
-    auto s = videoInfo.m_buffer.size();
-    if (s < imageSize || s >= imageSize * 2)
-        videoInfo.m_buffer.resize(imageSize);
-    image_header_type *localHdr = (image_header_type*)&videoInfo.m_buffer[0];
+
+    if (destWidth != videoInfo.m_videoStride || destWidth != videoInfo.m_videoWidth || destHeight != videoInfo.m_videoHeight) {
+        videoInfo.m_videoSizeChanged = true;
+        videoInfo.m_videoStride = destWidth;
+        videoInfo.m_videoWidth = destWidth;
+        videoInfo.m_videoHeight = destHeight;
+        videoInfo.m_needUpdate = true;
+        return 0;
+    }
+
+    if (videoInfo.m_ybuffer == nullptr || videoInfo.m_ubuffer == nullptr || videoInfo.m_vbuffer == nullptr || videoInfo.m_headbuffer == nullptr) {
+        return 0;
+    }
+
+    image_header_type *localHdr = (image_header_type*)videoInfo.m_headbuffer;
     localHdr->format = hdr->format;
     localHdr->mirrored = hdr->mirrored;
     localHdr->timestamp = htons(hdr->timestamp);
@@ -161,19 +173,10 @@ int NodeVideoFrameTransporter::deliverVideoSourceFrame(const char* payload, int 
     localHdr->right = htons(0);
     localHdr->top = htons(0);
     localHdr->bottom = htons(0);
-    unsigned char* desty = &videoInfo.m_buffer[0] + sizeof(image_header_type);
-    unsigned char* destu = desty + destWidth * destHeight;
-    unsigned char* destv = destu + destWidth / 2 * destHeight / 2;
+
     I420Scale((const uint8*)y, info->stride0, (const uint8*)u, info->strideU, (const uint8*)v, info->strideV, info->width, info->height, 
-        (uint8*)desty, destWidth, (uint8*)destu, destWidth / 2, (uint8*)destv, destWidth / 2, destWidth, destHeight, kFilterNone);
-    videoInfo.m_bufferList[0].buffer = (unsigned char*)localHdr;
-    videoInfo.m_bufferList[0].length = sizeof(*localHdr);
-    videoInfo.m_bufferList[1].buffer = (unsigned char*)desty;
-    videoInfo.m_bufferList[1].length = destWidth * destHeight;
-    videoInfo.m_bufferList[2].buffer = (unsigned char*)destu;
-    videoInfo.m_bufferList[2].length = destWidth / 2 * destHeight / 2;
-    videoInfo.m_bufferList[3].buffer = (unsigned char*)destv;
-    videoInfo.m_bufferList[3].length = destWidth / 2 * destHeight / 2;
+        (uint8*)videoInfo.m_ybuffer, destWidth, (uint8*)videoInfo.m_ubuffer, destWidth / 2, (uint8*)videoInfo.m_vbuffer, destWidth / 2, destWidth, destHeight, kFilterNone);
+
     videoInfo.m_count = 0;
     videoInfo.m_needUpdate = true;
     return 0;
@@ -183,27 +186,39 @@ int NodeVideoFrameTransporter::deliverFrame_I420(NodeRenderType type, agora::rtc
 {
     if (!init)
         return -1;
-    int stride, stride0 = videoFrame.stride(IVideoFrame::Y_PLANE);
-    stride = stride0;
+    int srcStride = videoFrame.stride(IVideoFrame::Y_PLANE);
+    int stride = srcStride;
     if (stride & 0xf) {
         stride = (((stride + 15) >> 4) << 4);
     }
     rotation = rotation < 0 ? rotation + 360 : rotation;
     std::lock_guard<std::mutex> lck(m_lock);
     VideoFrameInfo& info = getVideoFrameInfo(type, uid, channelId);
+    if (info.m_videoSizeChanged) {
+        return 0;
+    }
     int destStride = info.m_destWidth ? info.m_destWidth : stride;
     int destWidth = info.m_destWidth ? info.m_destWidth : videoFrame.width();
     int destHeight = info.m_destHeight ? info.m_destHeight : videoFrame.height();
-    size_t imageSize = sizeof(image_header_type) + destStride * destHeight * 3 / 2;
-    auto s = info.m_buffer.size();
-    if (s < imageSize || s >= imageSize * 2)
-        info.m_buffer.resize(imageSize);
-    image_header_type* hdr = reinterpret_cast<image_header_type*>(&info.m_buffer[0]);
+    if (destStride != info.m_videoStride || destWidth != info.m_videoWidth || destHeight != info.m_videoHeight) {
+        info.m_videoSizeChanged = true;
+        info.m_videoStride = destStride;
+        info.m_videoWidth = destWidth;
+        info.m_videoHeight = destHeight;
+        info.m_needUpdate = true;
+        return 0;
+    }
+
+    if (info.m_ybuffer == nullptr || info.m_ubuffer == nullptr || info.m_vbuffer == nullptr || info.m_headbuffer == nullptr) {
+        return 0;
+    }
+
+    image_header_type* hdr = reinterpret_cast<image_header_type*>(info.m_headbuffer);
     hdr->mirrored = mirrored ? 1 : 0;
     hdr->rotation = htons(rotation);
     setupFrameHeader(hdr, destStride, destWidth, destHeight);
     
-    copyFrame(videoFrame, info, destStride, stride0, destWidth, destHeight);
+    copyFrame(videoFrame, info);
     info.m_count = 0;
     info.m_needUpdate = true;
     return 0;
@@ -224,40 +239,26 @@ void NodeVideoFrameTransporter::setupFrameHeader(image_header_type*header, int s
     header->timestamp = 0;
 }
 
-void NodeVideoFrameTransporter::copyFrame(const agora::media::IVideoFrame& videoFrame, VideoFrameInfo& info, int dest_stride, int src_stride, int width, int height)
+void NodeVideoFrameTransporter::copyFrame(const agora::media::IVideoFrame& videoFrame, VideoFrameInfo& info)
 {
-    int width2 = dest_stride / 2, heigh2 = height / 2;
+    int width2 = info.m_videoStride / 2, heigh2 = info.m_videoHeight / 2;
     int strideY = videoFrame.stride(IVideoFrame::Y_PLANE);
     int strideU = videoFrame.stride(IVideoFrame::U_PLANE);
     int strideV = videoFrame.stride(IVideoFrame::V_PLANE);
 
-    unsigned char* y = &info.m_buffer[0] + sizeof(image_header_type);
-    unsigned char* u = y + dest_stride * height;
-    unsigned char* v = u + width2 * heigh2;
     const unsigned char* planeY = videoFrame.buffer(IVideoFrame::Y_PLANE);
     const unsigned char* planeU = videoFrame.buffer(IVideoFrame::U_PLANE);
     const unsigned char* planeV = videoFrame.buffer(IVideoFrame::V_PLANE);
 
-    if (videoFrame.width() == width && videoFrame.height() == height)
+    if (videoFrame.width() == info.m_videoWidth && videoFrame.height() == info.m_videoHeight)
     {
-        copyAndCentreYuv(planeY, planeU, planeV, videoFrame.width(), videoFrame.height(), src_stride, y, u, v, dest_stride);
+        copyAndCentreYuv(planeY, planeU, planeV, videoFrame.width(), videoFrame.height(), strideY, info.m_ybuffer, info.m_ubuffer, info.m_vbuffer, info.m_videoStride);
     }
     else
     {
-        I420Scale(planeY, strideY, planeU, strideU, planeV, strideV, videoFrame.width(), videoFrame.height(), (uint8*)y, dest_stride, (uint8*)u, width2, (uint8*)v, width2, width, height, kFilterNone);
+        I420Scale(planeY, strideY, planeU, strideU, planeV, strideV, videoFrame.width(), videoFrame.height(), 
+        (uint8*)info.m_ybuffer, info.m_videoStride, (uint8*)info.m_ubuffer, info.m_videoStride/2, (uint8*)info.m_vbuffer, info.m_videoStride/2, info.m_videoWidth, info.m_videoHeight, kFilterNone);
     }
-
-    info.m_bufferList[0].buffer = &info.m_buffer[0];
-    info.m_bufferList[0].length = sizeof(image_header_type);
-
-    info.m_bufferList[1].buffer = y;
-    info.m_bufferList[1].length = dest_stride * height;
-
-    info.m_bufferList[2].buffer = u;
-    info.m_bufferList[2].length = width2 * heigh2;
-
-    info.m_bufferList[3].buffer = v;
-    info.m_bufferList[3].length = width2 * heigh2;
 }
 
 void NodeVideoFrameTransporter::copyAndCentreYuv(const unsigned char* srcYPlane, const unsigned char* srcUPlane, const unsigned char* srcVPlane, int width, int height, int srcStride,
@@ -296,50 +297,19 @@ unsigned char* dstYPlane, unsigned char* dstUPlane, unsigned char* dstVPlane, in
     }
 }
 
-VideoFrameInfo& NodeVideoFrameTransporter::getHighVideoFrameInfo(agora::rtc::uid_t uid, std::string channelId)
-{
-    auto cit = m_remoteHighVideoFrames.find(channelId);
-    if (cit == m_remoteHighVideoFrames.end()) {
-        m_remoteHighVideoFrames[channelId] = std::unordered_map<agora::rtc::uid_t, VideoFrameInfo>();
-    }
-
-    auto it = m_remoteHighVideoFrames[channelId].find(uid);
-    if (it == m_remoteHighVideoFrames[channelId].end()) {
-        m_remoteHighVideoFrames[channelId][uid] = VideoFrameInfo(NODE_RENDER_TYPE_REMOTE, uid, channelId);
-    }
-    return m_remoteHighVideoFrames[channelId][uid];
-}
-
 void NodeVideoFrameTransporter::addToHighVideo(agora::rtc::uid_t uid, std::string channelId)
 {
-    std::lock_guard<std::mutex> lck(m_lock);
-    auto cit = m_remoteVideoFrames.find(channelId);
-    if(cit != m_remoteVideoFrames.end()){
-        auto it = m_remoteVideoFrames[channelId].find(uid);
-        if(it != m_remoteVideoFrames[channelId].end())
-            m_remoteVideoFrames[channelId].erase(it);
-    }
-    getHighVideoFrameInfo(uid, channelId);
+
 }
 
 void NodeVideoFrameTransporter::removeFromeHighVideo(agora::rtc::uid_t uid, std::string channelId)
 {
-    std::lock_guard<std::mutex> lck(m_lock);
-    auto cit = m_remoteHighVideoFrames.find(channelId);
-    if(cit != m_remoteHighVideoFrames.end()){
-        auto it = m_remoteHighVideoFrames[channelId].find(uid);
-        if(it != m_remoteHighVideoFrames[channelId].end())
-            m_remoteHighVideoFrames[channelId].erase(it);
-    }
-    getVideoFrameInfo(NODE_RENDER_TYPE_REMOTE, uid, channelId);
+
 }
 
 void NodeVideoFrameTransporter::setHighFPS(uint32_t fps)
 {
-    if(fps == 0)
-        return;
-    std::lock_guard<std::mutex> lck(m_lock);
-    m_highFPS = fps;
+
 }
 
 void NodeVideoFrameTransporter::setFPS(uint32_t fps)
@@ -354,6 +324,17 @@ void NodeVideoFrameTransporter::setFPS(uint32_t fps)
     { \
         Local<Value> propName = String::NewFromUtf8(isolate, name, NewStringType::kInternalized).ToLocalChecked(); \
         Local<Value> propVal = napi_create_uint32_(isolate, val); \
+        v8::Maybe<bool> ret = obj->Set(isolate->GetCurrentContext(), propName, propVal); \
+        if(!ret.IsNothing()) { \
+            if(!ret.ToChecked()) { \
+                break; \
+            } \
+        } \
+    }
+#define NODE_SET_OBJ_PROP_BOOL(obj, name, val) \
+    { \
+        Local<Value> propName = String::NewFromUtf8(isolate, name, NewStringType::kInternalized).ToLocalChecked(); \
+        Local<Value> propVal = napi_create_bool_(isolate, val); \
         v8::Maybe<bool> ret = obj->Set(isolate->GetCurrentContext(), propName, propVal); \
         if(!ret.IsNothing()) { \
             if(!ret.ToChecked()) { \
@@ -407,15 +388,12 @@ bool AddObj(Isolate* isolate, Local<v8::Array>& infos, int index, VideoFrameInfo
         Local<v8::Object> obj = Object::New(isolate);
         NODE_SET_OBJ_PROP_UINT32(obj, "type", info.m_renderType);
         NODE_SET_OBJ_PROP_UINT32(obj, "uid", info.m_uid);
+        NODE_SET_OBJ_PROP_UINT32(obj, "width", info.m_videoWidth);
+        NODE_SET_OBJ_PROP_UINT32(obj, "height", info.m_videoHeight);
+        NODE_SET_OBJ_PROP_UINT32(obj, "stride", info.m_videoStride);
+        NODE_SET_OBJ_PROP_BOOL(obj, "videoSizeChanged", info.m_videoSizeChanged);
         NODE_SET_OBJ_PROP_STRING(obj, "channelId", info.m_channelId.c_str());
-        auto it = info.m_bufferList.begin();
-        NODE_SET_OBJ_PROP_HEADER(obj, it);
-        ++it;
-        NODE_SET_OBJ_PROP_DATA(obj, "ydata", it);
-        ++it;
-        NODE_SET_OBJ_PROP_DATA(obj, "udata", it);
-        ++it;
-        NODE_SET_OBJ_PROP_DATA(obj, "vdata", it);
+
         result = infos->Set(isolate->GetCurrentContext(), index, obj).FromJust();
     }while(false);
     return result;
@@ -465,6 +443,14 @@ void NodeVideoFrameTransporter::FlushVideo()
                     }
                 }
 
+                if (m_videoSourceVideoFrame.get()) {
+                    if (AddObj(isolate, infos, i, *m_videoSourceVideoFrame.get()))
+                        ++i;
+                    else {
+                        ++m_videoSourceVideoFrame->m_count;
+                    }
+                }
+
                 if (m_devTestVideoFrame.get()) {
                     if (AddObj(isolate, infos, i, *m_devTestVideoFrame.get()))
                         ++i;
@@ -478,61 +464,6 @@ void NodeVideoFrameTransporter::FlushVideo()
                 }
             });
             std::this_thread::sleep_for(std::chrono::milliseconds(1000 / m_FPS));
-        }
-    }
-}
-
-void NodeVideoFrameTransporter::highFlushVideo()
-{
-    while (!m_stopFlag) {
-        {
-            std::unique_lock<std::mutex> lck(m_lock);
-            for (auto cit = m_remoteHighVideoFrames.begin(); cit != m_remoteHighVideoFrames.end();) {
-                for (auto it = cit->second.begin(); it != cit->second.end();) {
-                    if (it->second.m_count > MAX_MISS_COUNT)
-                        it = cit->second.erase(it);
-                    else
-                        ++it;
-                }
-                ++cit;
-            }
-
-            if (m_videoSourceVideoFrame.get() && m_videoSourceVideoFrame->m_count > MAX_MISS_COUNT)
-                m_videoSourceVideoFrame.reset();
-
-            lck.unlock();
-
-            agora::rtc::node_async_call::async_call([this]() {
-                Isolate *isolate = env;
-                HandleScope scope(isolate);
-                std::lock_guard<std::mutex> lock(m_lock);
-                Local<v8::Array> infos = v8::Array::New(isolate);
-                
-                uint32_t i = 0;
-                for (auto& cit : m_remoteHighVideoFrames) {
-                    for (auto& it : cit.second) {
-                        if (AddObj(isolate, infos, i, it.second))
-                            ++i;
-                        else {
-                            ++it.second.m_count;
-                        }
-                    }
-                }
-
-                if (m_videoSourceVideoFrame.get()) {
-                    if (AddObj(isolate, infos, i, *m_videoSourceVideoFrame.get()))
-                        ++i;
-                    else {
-                        ++m_videoSourceVideoFrame->m_count;
-                    }
-                }
-
-                if (i > 0) {
-                    Local<v8::Value> args[1] = { infos };
-                    callback.Get(isolate)->Call(isolate->GetCurrentContext(), js_this.Get(isolate), 1, args);
-                }
-            });
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000 / m_highFPS));
         }
     }
 }
