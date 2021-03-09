@@ -22,7 +22,7 @@ bool startLogService(const char* path)
     if(log_stream)
         return false;
     if(path){
-        log_stream = fopen(path, "w");
+        log_stream = fopen(path, "ab+");
         return true;
     }
     return false;

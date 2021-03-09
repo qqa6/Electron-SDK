@@ -3795,6 +3795,9 @@ namespace agora {
                 Isolate* isolate = args.GetIsolate();
                 Local<Context> context = isolate->GetCurrentContext();
                 napi_get_native_this(args, pEngine);
+                if (!pEngine) {
+                    LOG_INFO("getAudioPlaybackDevices rtc engine is nullptr");
+                }
                 CHECK_NATIVE_THIS(pEngine);
               
                 if (!pEngine->m_audioVdm) {
@@ -3814,8 +3817,19 @@ namespace agora {
                     dev->Set(context, Nan::New<String>("devicename").ToLocalChecked(), dn);
                     dev->Set(context, Nan::New<String>("deviceid").ToLocalChecked(), di);
                     devices->Set(context, i, dev);
+                    LOG_INFO("getAudioPlaybackDevices adm %p, pdc: %p, deviecCount: %d, deviceName: %s, deviceId, %s", adm, pdc, count, deviceName, deviceId);
                     deviceName[0] = '\0';
                     deviceId[0] = '\0';
+                }
+
+                if (adm) {
+                    if (pdc) {
+                        LOG_INFO("getAudioPlaybackDevices adm %p, pdc: %p, deviecCount: %d", adm, pdc, count);
+                    } else {
+                        LOG_INFO("getAudioPlaybackDevices adm %p, pdc is nullptr, deviecCount: %d", adm, count);
+                    }
+                } else {
+                    LOG_INFO("getAudioPlaybackDevices adm is nullptr, pdc is nullptr, deviecCount: %d", count);
                 }
                 args.GetReturnValue().Set(devices);
             } while (false);
@@ -3955,6 +3969,9 @@ namespace agora {
                 Isolate* isolate = args.GetIsolate();
                 Local<Context> context = isolate->GetCurrentContext();
                 napi_get_native_this(args, pEngine);
+                if (!pEngine) {
+                    LOG_INFO("getAudioRecordingDevices rtc engine is nullptr");
+                }
                 CHECK_NATIVE_THIS(pEngine);
                
                 if (!pEngine->m_audioVdm) {
@@ -3974,8 +3991,19 @@ namespace agora {
                     dev->Set(context, Nan::New<String>("devicename").ToLocalChecked(), dn);
                     dev->Set(context, Nan::New<String>("deviceid").ToLocalChecked(), di);
                     devices->Set(context, i, dev);
+                    LOG_INFO("getAudioRecordingDevices adm %p, pdc: %p, deviecCount: %d, deviceName: %s, deviceId, %s", adm, pdc, count, deviceName, deviceId);
                     deviceName[0] = '\0';
                     deviceId[0] = '\0';
+                }
+                
+                if (adm) {
+                    if (pdc) {
+                        LOG_INFO("getAudioRecordingDevices adm %p, pdc: %p, deviecCount: %d", adm, pdc, count);
+                    } else {
+                        LOG_INFO("getAudioRecordingDevices adm %p, pdc is nullptr, deviecCount: %d", adm, count);
+                    }
+                } else {
+                    LOG_INFO("getAudioRecordingDevices adm is nullptr, pdc is nullptr, deviecCount: %d", count);
                 }
                 args.GetReturnValue().Set(devices);
             } while (false);
