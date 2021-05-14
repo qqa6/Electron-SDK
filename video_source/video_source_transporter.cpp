@@ -70,6 +70,7 @@ bool AgoraVideoSourceTransporter::initialize()
 {
     clear();
     m_buf.reserve(AgoraVideoSourceTransporter::S_BUF_LEN);
+    loguru::add_file("videosource.log", loguru::Append, loguru::Verbosity_MAX);
     return true;
 }
 
@@ -79,7 +80,9 @@ void AgoraVideoSourceTransporter::release()
 
 int AgoraVideoSourceTransporter::deliverFrame(const agora::media::IVideoFrame& videoFrame, int rotation, bool mirrored)
 {
+
     deliverFrame_I420(videoFrame, rotation, mirrored);
+
     m_videoSource.sendData(m_buf.data(), AgoraVideoSourceTransporter::S_BUF_LEN);
     return 0;
 }
@@ -97,6 +100,8 @@ int AgoraVideoSourceTransporter::deliverFrame_I420(const agora::media::IVideoFra
     int height = videoFrame.height();
     int destWidth = width;
     int destHeight = height;
+
+      LOG_F(INFO, "AgoraVideoSourceTransporter::deliverFrame_I420  width:  %d   height:%d   ystride: %d ", width, height, stride);
     if (width != stride0 || (width % 16) != 0){
         destWidth = (((width + 15) >> 4) << 4);
     }
@@ -128,8 +133,11 @@ int AgoraVideoSourceTransporter::deliverFrame_I420(const agora::media::IVideoFra
     const unsigned char* planeY = videoFrame.buffer(IVideoFrame::Y_PLANE);
     const unsigned char* planeU = videoFrame.buffer(IVideoFrame::U_PLANE);
     const unsigned char* planeV = videoFrame.buffer(IVideoFrame::V_PLANE);
-	I420Scale(planeY, stride0, planeU, strideU, planeV, strideV, width, height, 
+	I420Scale(planeY, stride0, planeU, strideU, planeV, strideV, width, height,
         (uint8*)y, destWidth, (uint8*)u, destWidth / 2, (uint8*)v, destWidth / 2, destWidth, destHeight, kFilterNone);
+
+
+      LOG_F(INFO, "AgoraVideoSourceTransporter::deliverFrame_I420 after  width:  %d   height:%d   ystride: %d ", destWidth, destHeight, destWidth);
     return 0;
 }
 

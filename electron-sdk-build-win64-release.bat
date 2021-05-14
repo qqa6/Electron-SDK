@@ -9,7 +9,7 @@ call npm config set ELECTRON_MIRROR http://npm.taobao.org/mirrors/electron/
 call npm install --verbose
 call npm run switch:arch -- --arch=x64
 call npm run sync:lib --  --arch=x64
-call npm run build:electron -- --electron_version=5.0.8 --msvs_version=2019 --arch=x64
+call npm run build:electron -- --electron_version=7.1.2 --msvs_version=2019 --arch=x64
 call npm run build:ts
 D:\SignatureTools\SignatureTools\signtool.exe sign /f "D:\SignatureTools\SignatureTools\agora.pfx" /p "31169323" /t "http://timestamp.comodoca.com/authenticode" "build/Release/VideoSource.exe"
 D:\SignatureTools\SignatureTools\signtool.exe sign /f "D:\SignatureTools\SignatureTools\agora.pfx" /p "31169323" /t "http://timestamp.comodoca.com/authenticode" "build/Release/agora_node_ext.node"
