@@ -40,16 +40,16 @@ task('sync:lib', () => {
   })
 })
 
-// npm run build:electron -- 
+// npm run build:electron --
 task('build:electron', () => {
 
   cleanup(path.join(__dirname, "./build")).then(_ => {
     build({
-      electronVersion: argv().electron_version, 
-      runtime: argv().runtime, 
-      platform: argv().platform, 
-      packageVersion, 
-      debug: argv().debug, 
+      electronVersion: argv().electron_version,
+      runtime: argv().runtime,
+      platform: argv().platform,
+      packageVersion,
+      debug: argv().debug,
       silent: argv().silent,
       arch: argv().arch,
       msvsVersion: argv().msvs_version,
@@ -60,11 +60,11 @@ task('build:electron', () => {
 // npm run build:node --
 task('build:node', () => {
   build({
-    electronVersion: argv().electron_version, 
+    electronVersion: argv().electron_version,
     runtime: 'node',
     packageVersion,
     platform: argv().platform,
-    debug: argv().debug, 
+    debug: argv().debug,
     silent: argv().silent,
     msvsVersion: argv().msvs_version
   })
@@ -76,8 +76,8 @@ task('download', () => {
   cleanup(path.join(__dirname, "./build")).then(_ => {
     cleanup(path.join(__dirname, './js')).then(_ => {
       download({
-        electronVersion: argv().electron_version, 
-        platform: argv().platform, 
+        electronVersion: argv().electron_version,
+        platform: argv().platform,
         packageVersion: addonVersion,
         arch: argv().arch
       })
@@ -86,13 +86,14 @@ task('download', () => {
 })
 // trigger when run npm install
 task('install', () => {
+  return;
   const config = Object.assign({}, getArgvFromNpmEnv(), getArgvFromPkgJson())
   // work-around
   const addonVersion = '2.9.107-rc.136-build.513'
   if (config.prebuilt) {
     download({
-      electronVersion: config.electronVersion, 
-      platform: config.platform, 
+      electronVersion: config.electronVersion,
+      platform: config.platform,
       packageVersion: addonVersion,
       arch: config.arch,
       no_symbol: config.no_symbol,

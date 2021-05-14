@@ -1,4 +1,4 @@
-export const APP_ID = process.env["AGORA_APPID"] || ""
+export const APP_ID = "aab8b8f5a8cd4469a63042fcfafe7063"
 export const SHARE_ID = 2
 export const RTMP_URL = ''
 export const FU_AUTH = []
@@ -120,7 +120,7 @@ export const audioProfileList = [
   {
     value: 5,
     label: 'AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO'
-  } 
+  }
 ]
 
 export const audioScenarioList = [
@@ -147,5 +147,5 @@ export const audioScenarioList = [
   {
     value: 5,
     label: 'AUDIO_SCENARIO_CHATROOM_GAMING'
-  } 
+  }
 ]

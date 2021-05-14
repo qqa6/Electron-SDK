@@ -59,7 +59,7 @@ export default class App extends Component {
       this.rtcEngine = new AgoraRtcEngine()
       this.rtcEngine.initialize(APP_ID)
       this.rtcEngine.initializePluginManager();
-      const libPath = isMac ? 
+      const libPath = isMac ?
             path.resolve(__static, 'bytedance/libByteDancePlugin.dylib')
           : path.resolve(__static, 'bytedance/ByteDancePlugin.dll')
       if(this.rtcEngine.registerPlugin({
@@ -88,7 +88,7 @@ export default class App extends Component {
       let gain = 1;
       let publish = 0;
       let startPos = 0;
-      let parameters = `{\"che.audio.game_play_effect\":{\"soundId\":${soundId},\"filePath\":\"${filePath}\",\"loopCount\":${loopCount},\"pitch\":${pitch},\"pan\":${pan},\"gain\":${gain},\"send2far\":${publish},\"startPos\":${startPos}}}` 
+      let parameters = `{\"che.audio.game_play_effect\":{\"soundId\":${soundId},\"filePath\":\"${filePath}\",\"loopCount\":${loopCount},\"pitch\":${pitch},\"pan\":${pan},\"gain\":${gain},\"send2far\":${publish},\"startPos\":${startPos}}}`
       console.log(`parameters:   ${parameters}`)
       this.rtcEngine.setParameters(parameters)
      // let ret =  this.rtcEngine.playEffect(0, filePath, 1, 1, 0, 1, false, 0);
@@ -362,9 +362,9 @@ export default class App extends Component {
 
     /**
    * prepare screen share: initialize and join
-   * @param {string} token 
-   * @param {string} info 
-   * @param {number} timeout 
+   * @param {string} token
+   * @param {string} info
+   * @param {number} timeout
    */
   prepareScreenShare(token = null, info = '', timeout = 30000) {
     return new Promise((resolve, reject) => {
@@ -387,7 +387,7 @@ export default class App extends Component {
         rtcEngine.videoSourceEnableWebSdkInteroperability(true)
         // rtcEngine.videoSourceSetVideoProfile(50, false);
         // to adjust render dimension to optimize performance
-        rtcEngine.setVideoRenderDimension(3, SHARE_ID, 1200, 680);
+        // rtcEngine.setVideoRenderDimension(3, SHARE_ID, 1200, 680);
         rtcEngine.videoSourceJoin(token, this.state.channel, info, SHARE_ID);
       } catch(err) {
         clearTimeout(timer)
@@ -403,7 +403,7 @@ export default class App extends Component {
    * @param {*} rect null/if specified, {x: 0, y: 0, width: 0, height: 0}
    * @param {*} bitrate bitrate of video source screencapture
    */
-  startScreenShare(windowId=0, captureFreq=15, 
+  startScreenShare(windowId=0, captureFreq=15,
     rect={
       top: 0, left: 0, right: 0, bottom: 0
     }, bitrate=0
@@ -600,7 +600,7 @@ export default class App extends Component {
             "plugin.bytedance.faceAttributeModelPath": path.join(__static, "bytedance/resource/model/ttfaceattrmodel/tt_face_attribute_v4.1.model")
           }))
         }
-        
+
         plugin.enable();
         this.setState({
           bdEnabled: true
@@ -680,7 +680,7 @@ export default class App extends Component {
     } else {
       this.rtcEngine.removePublishStreamUrl(url)
     }
-    
+
     this.setState({
       rtmpTestOn: !this.state.rtmpTestOn
     })
