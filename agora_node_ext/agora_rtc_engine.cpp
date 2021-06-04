@@ -16,6 +16,7 @@
 #include "IAgoraRtcEngine2.h"
 #include <string>
 #include <nan.h>
+#include "loguru.hpp"
 
 #if defined(__APPLE__) || defined(_WIN32)
 #include "node_screen_window_info.h"
@@ -37,6 +38,7 @@ namespace agora {
          */
         void NodeRtcEngine::Init(Local<Object>& module)
         {
+            loguru::add_file("js_to_native.log", loguru::Append, loguru::Verbosity_MAX);
             Isolate *isolate = module->GetIsolate();
             v8::Local<v8::Context> context = isolate->GetCurrentContext();
             BEGIN_PROPERTY_DEFINE(NodeRtcEngine, createInstance, 5)
@@ -1685,9 +1687,11 @@ namespace agora {
 
         NAPI_API_DEFINE(NodeRtcEngine, videoSourceJoin)
         {
+            LOG_F(INFO, "%s, videoSourceJoin start 1 ", __FUNCTION__ );
             LOG_ENTER;
             int result = -1;
             do{
+                LOG_F(INFO, "%s, videoSourceJoin start 2 ", __FUNCTION__ );
                 NodeRtcEngine *pEngine = nullptr;
                 napi_get_native_this(args, pEngine);
                 CHECK_NATIVE_THIS(pEngine);
@@ -1704,11 +1708,14 @@ namespace agora {
 
                 status = NodeUid::getUidFromNodeValue(args[3], uid);
                 CHECK_NAPI_STATUS(pEngine, status);
+                LOG_F(INFO, "%s, videoSourceJoin start 3 ", __FUNCTION__ );
                 if (pEngine->m_videoSourceSink.get()){
+                    LOG_F(INFO, "%s, videoSourceJoin start 4 ", __FUNCTION__ );
                     pEngine->m_videoSourceSink->join(key, name, chan_info, uid);
                     result = 0;
                 }
             } while (false);
+            LOG_F(INFO, "%s, videoSourceJoin start 5 ", __FUNCTION__ );
             napi_set_int_result(args, result);
             LOG_LEAVE;
         }
@@ -1801,6 +1808,7 @@ namespace agora {
         NAPI_API_DEFINE(NodeRtcEngine, startScreenCapture2)
         {
             LOG_ENTER;
+            LOG_F(INFO, "startScreenCapture2 ");
             int result = -1;
             napi_status status = napi_ok;
             do{
@@ -1848,7 +1856,9 @@ namespace agora {
                 CHECK_NAPI_STATUS(pEngine, status);
                 Rect region(top, left, bottom, right);
                
+               LOG_F(INFO, "ready pEngine->m_videoSourceSink.get() ");
                 if (pEngine->m_videoSourceSink.get()) {
+                    LOG_F(INFO, "pEngine->m_videoSourceSink->captureScreen(windowId, captureFreq, &region, bitrate); ");
                     pEngine->m_videoSourceSink->captureScreen(windowId, captureFreq, &region, bitrate);
                     result = 0;
                 }
@@ -1859,6 +1869,7 @@ namespace agora {
 
         NAPI_API_DEFINE(NodeRtcEngine, stopScreenCapture2)
         {
+            LOG_F(INFO, "stopScreenCapture2 ");
             LOG_ENTER;
             int result = -1;
             do{
@@ -1876,6 +1887,7 @@ namespace agora {
 
         NAPI_API_DEFINE(NodeRtcEngine, videoSourceSetLogFile)
         {
+            LOG_F(INFO, "videoSourceSetLogFile ");
             LOG_ENTER;
             int result = -1;
             do{

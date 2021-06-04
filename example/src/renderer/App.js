@@ -57,7 +57,7 @@ export default class App extends Component {
     if(!this.rtcEngine) {
       this.rtcEngine = new AgoraRtcEngine()
       this.rtcEngine.initialize(APP_ID)
-      this.rtcEngine.initializePluginManager();
+      // this.rtcEngine.initializePluginManager();
       const libPath = isMac ? 
             path.resolve(__static, 'bytedance/libByteDancePlugin.dylib')
           : path.resolve(__static, 'bytedance/ByteDancePlugin.dll')

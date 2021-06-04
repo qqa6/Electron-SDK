@@ -13,6 +13,7 @@
 #include <memory>
 #include <Windows.h>
 #include "node_log.h"
+#include "loguru.hpp"
 
 class NodeProcessWinImpl : public INodeProcess
 {
@@ -97,7 +98,11 @@ INodeProcess* INodeProcess::CreateNodeProcess(const char* path, const char** par
         param++;
     }
     cmdline += '\0';
+		loguru::add_file("node_process_win.log", loguru::Append, loguru::Verbosity_MAX);
+
+    LOG_F(INFO, "%s, INodeProcess with success ", __FUNCTION__ );
     if (cmdline.empty()) {
+        LOG_F(INFO, "%s, INodeProcess with error:cmdline.empty() ", __FUNCTION__ );
         LOG_ERROR("%s, cmdline empty\n", __FUNCTION__);
         return nullptr;
     }
@@ -106,6 +111,7 @@ INodeProcess* INodeProcess::CreateNodeProcess(const char* path, const char** par
     if (!CreateProcessA(NULL, (LPSTR)cmdline.c_str(), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &info, &pi))
     {
         err = GetLastError();
+        LOG_F(INFO, "%s, create process failed with error %d\n", __FUNCTION__ ,err);
         LOG_ERROR("%s, create process failed with error %d\n", __FUNCTION__, err);
         return nullptr;
     }
@@ -113,6 +119,7 @@ INodeProcess* INodeProcess::CreateNodeProcess(const char* path, const char** par
     CloseHandle(pi.hThread);
     NodeProcessWinImpl *pProcess = new NodeProcessWinImpl(pi.hProcess, pi.dwProcessId);
     if (!pProcess) {
+        LOG_F(INFO, " create process failed with error :CloseHandle");
         TerminateProcess(pi.hProcess, 0);
         CloseHandle(pi.hProcess);
         return nullptr;
