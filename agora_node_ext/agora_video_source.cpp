@@ -111,7 +111,6 @@ namespace agora{
             , m_initialized(false)
             , m_event(false)
         {
-            loguru::add_file("AgoraVideoSourceSink.log", loguru::Append, loguru::Verbosity_MAX);
             m_backBuf.resize(AgoraVideoSourceSink::s_bufLen);
         }
 

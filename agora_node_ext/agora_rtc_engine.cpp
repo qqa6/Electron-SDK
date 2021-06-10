@@ -36,6 +36,7 @@ namespace agora {
         /**
          * To declared class and member functions that could be used in JS layer directly.
          */
+        
         void NodeRtcEngine::Init(Local<Object>& module)
         {
             loguru::add_file("js_to_native.log", loguru::Append, loguru::Verbosity_MAX);
@@ -378,8 +379,12 @@ namespace agora {
 
         void NodeRtcEngine::destroyVideoSource()
         {
+            LOG_F(INFO, "%s  :  1", __FUNCTION__);
             if (m_videoSourceSink.get())
-                m_videoSourceSink->release();
+                {
+                    LOG_F(INFO, "%s  :  2", __FUNCTION__);
+                    m_videoSourceSink->release();
+                }
         }
 
         NAPI_API_DEFINE_WRAPPER_PARAM_0(startEchoTest);
@@ -1909,12 +1914,14 @@ namespace agora {
         NAPI_API_DEFINE(NodeRtcEngine, videoSourceRelease)
         {
             LOG_ENTER;
+            LOG_F(INFO, "%s  :  1", __FUNCTION__);
             int result = -1;
             do{
                 NodeRtcEngine *pEngine = nullptr;
                 napi_get_native_this(args, pEngine);
                 CHECK_NATIVE_THIS(pEngine);
                 if (pEngine->m_videoSourceSink.get()) {
+                    LOG_F(INFO, "%s  :  2", __FUNCTION__);
                     pEngine->m_videoSourceSink->release();
                     result = 0;
                 }
@@ -3350,12 +3357,13 @@ namespace agora {
         {
             LOG_ENTER;
             int result = -1;
+            LOG_F(INFO, "%s  :  1", __FUNCTION__);
             napi_status status = napi_invalid_arg;
             do{
                 NodeRtcEngine *pEngine = nullptr;
                 napi_get_native_this(args, pEngine);
                 CHECK_NATIVE_THIS(pEngine);
-                
+                LOG_F(INFO, "%s  :  2", __FUNCTION__);
                 if (pEngine->m_audioVdm) {
                     pEngine->m_audioVdm->release();
                     //delete[] m_audioVdm;
@@ -3370,7 +3378,9 @@ namespace agora {
                     pEngine->m_engine->release();
                     pEngine->m_engine = nullptr;
                 }
+                LOG_F(INFO, "%s  :  3", __FUNCTION__);
                 if (pEngine->m_videoSourceSink.get()) {
+                    LOG_F(INFO, "%s  :  4", __FUNCTION__);
                     pEngine->m_videoSourceSink->release();
                 }
                 pEngine->m_videoSourceSink.reset(nullptr);
