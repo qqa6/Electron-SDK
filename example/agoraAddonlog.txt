@@ -1,0 +1,15 @@
+Error :registerPlugin, :4488, dlopen(/Users/jerry/Projects/Agora/Electron-SDK/example/static/bytedance/libByteDancePlugin.dylib, 1): image not foundn, not unload plugin "bytedance"
+
+Create video stream channel for type : 0, uid :0
+
+TO start process, path : /Users/jerry/Projects/Agora/Electron-SDK/build/Release/
+execv : VideoSource, id:/8682A543-5E5F-4E31-, pid:8276, fd:93,appid:aab8b8f5a8cd4469a63042fcfafe7063
+
+Receive msg : 5
+
+Create video stream channel for type : 3, uid :0
+
+Receive msg : 6
+
+Receive msg : 17
+
