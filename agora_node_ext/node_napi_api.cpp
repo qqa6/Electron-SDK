@@ -372,11 +372,23 @@ void NodeVideoFrameTransporter::setFPS(uint32_t fps)
             } \
         } \
     }
+
+Local<v8::ArrayBuffer> objSetArrayBuffer(v8::Isolate *isolate, Local<v8::Object>& obj, void* buffer, int length) {
+#if (NODE_MODULE_VERSION > 87)    
+    auto backStore = v8::ArrayBuffer::NewBackingStore(buffer, length, nullptr, nullptr);
+    std::shared_ptr<v8::BackingStore> sharedBackStore = std::move(backStore);
+    Local<v8::ArrayBuffer> buff = v8::ArrayBuffer::New(isolate, sharedBackStore);
+#else
+    Local<v8::ArrayBuffer> buff = v8::ArrayBuffer::New(isolate, buffer, length);
+#endif
+    return buff;
+}
+
 #define NODE_SET_OBJ_PROP_HEADER(obj, it) \
     { \
         Local<Value> propName = String::NewFromUtf8(isolate, "header", NewStringType::kInternalized).ToLocalChecked(); \
-        Local<v8::ArrayBuffer> buff = v8::ArrayBuffer::New(isolate, (it)->buffer, (it)->length); \
-        v8::Maybe<bool> ret = obj->Set(isolate->GetCurrentContext(), propName, buff); \
+        auto arrayBuffer = objSetArrayBuffer(isolate, obj, it->buffer, it->length); \
+        v8::Maybe<bool> ret = obj->Set(isolate->GetCurrentContext(), propName, arrayBuffer); \
         if(!ret.IsNothing()) { \
             if(!ret.ToChecked()) { \
                 break; \
@@ -387,7 +399,7 @@ void NodeVideoFrameTransporter::setFPS(uint32_t fps)
 #define NODE_SET_OBJ_PROP_DATA(obj, name, it) \
     { \
         Local<Value> propName = String::NewFromUtf8(isolate, name, NewStringType::kInternalized).ToLocalChecked(); \
-        Local<v8::ArrayBuffer> buff = v8::ArrayBuffer::New(isolate, (it)->buffer, (it)->length); \
+        auto buff = objSetArrayBuffer(isolate, obj, it->buffer, it->length); \
         Local<v8::Uint8Array> dataarray = v8::Uint8Array::New(buff, 0, it->length);\
         v8::Maybe<bool> ret = obj->Set(isolate->GetCurrentContext(), propName, dataarray); \
         if(!ret.IsNothing()) { \
@@ -756,7 +768,11 @@ napi_status napi_get_object_property_arraybuffer_(Isolate* isolate, const Local<
     
     auto localBuf = Local<v8::ArrayBuffer>::Cast(value);
     auto buf = *localBuf;
+#if (NODE_MODULE_VERSION > 87) 
+    memcpy(buffer, buf->GetBackingStore()->Data(), buf->GetBackingStore()->ByteLength());
+#else
     memcpy(buffer, buf->GetContents().Data(), buf->GetContents().ByteLength());
+#endif
     return napi_ok;
 }
 
