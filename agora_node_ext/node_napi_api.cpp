@@ -375,9 +375,8 @@ void NodeVideoFrameTransporter::setFPS(uint32_t fps)
 
 Local<v8::ArrayBuffer> objSetArrayBuffer(v8::Isolate *isolate, Local<v8::Object>& obj, void* buffer, int length) {
 #if (NODE_MODULE_VERSION > 87)    
-    auto backStore = v8::ArrayBuffer::NewBackingStore(buffer, length, nullptr, nullptr);
-    std::shared_ptr<v8::BackingStore> sharedBackStore = std::move(backStore);
-    Local<v8::ArrayBuffer> buff = v8::ArrayBuffer::New(isolate, sharedBackStore);
+    auto backStore = v8::ArrayBuffer::NewBackingStore(buffer, length, [](void*, size_t, void*){}, nullptr);
+    Local<v8::ArrayBuffer> buff = v8::ArrayBuffer::New(isolate, std::move(backStore));
 #else
     Local<v8::ArrayBuffer> buff = v8::ArrayBuffer::New(isolate, buffer, length);
 #endif
