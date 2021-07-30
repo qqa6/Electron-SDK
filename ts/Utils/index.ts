@@ -43,11 +43,20 @@ export const changeEventNameForEngine = (eventName: string) =>
 export const changeEventNameForVideoSource = (eventName: string) =>
   "videoSource" + eventName.slice(2);
 
-export const jsonStringToArray = (jsonString: string) => {
+export const jsonStringToArray = (jsonString: string) =>
+  jsonStringConvertWithDefaultValue(jsonString, []);
+
+export const jsonStringToObj = (jsonString: string) =>
+  jsonStringConvertWithDefaultValue(jsonString, {});
+
+export const jsonStringConvertWithDefaultValue = (
+  jsonString: string,
+  defaultValue: any
+) => {
   try {
     return JSON.parse(jsonString);
   } catch (error) {
-    logError(`jsonStringToArray error: ${jsonString}`);
-    return [];
+    logError(`jsonStringConvertWithDefaultValue error: ${jsonString}`);
+    return defaultValue;
   }
 };

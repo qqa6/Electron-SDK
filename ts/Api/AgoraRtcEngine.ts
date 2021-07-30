@@ -102,6 +102,7 @@ import {
   changeEventNameForEngine,
   jsonStringToArray,
   changeEventNameForVideoSource,
+  jsonStringToObj,
 } from "../Utils";
 import { PluginInfo, Plugin } from "./plugin";
 import { RendererManager } from "../Renderer/RendererManager";
@@ -357,7 +358,8 @@ export class AgoraRtcEngine extends EventEmitter {
             uid: number;
             streamId: number;
             length: number;
-          } = JSON.parse(_eventData);
+          } = jsonStringToObj(_eventData);
+
           this.fire(
             EngineEvents.STREAM_MESSAGE,
             data.uid,
@@ -369,7 +371,7 @@ export class AgoraRtcEngine extends EventEmitter {
 
       case "onReadyToSendMetadata":
         {
-          let data: { metadata: Metadata } = JSON.parse(_eventData);
+          let data: { metadata: Metadata } = jsonStringToObj(_eventData);
           data.metadata.buffer = _eventBuffer;
           this.fire(EngineEvents.READY_TO_SEND_METADATA, data.metadata);
         }
@@ -377,7 +379,7 @@ export class AgoraRtcEngine extends EventEmitter {
 
       case "onMetadataReceived":
         {
-          let data: { metadata: Metadata } = JSON.parse(_eventData);
+          let data: { metadata: Metadata } = jsonStringToObj(_eventData);
           data.metadata.buffer = _eventBuffer;
           this.fire(EngineEvents.METADATA_RECEIVED, data.metadata);
         }
@@ -2941,7 +2943,7 @@ export class AgoraRtcEngine extends EventEmitter {
 
     let returnValue = {
       errCode: ret.retCode,
-      userInfo: JSON.parse(ret.result),
+      userInfo: jsonStringToObj(ret.result),
     };
 
     return returnValue;
@@ -2977,7 +2979,7 @@ export class AgoraRtcEngine extends EventEmitter {
 
     let returnValue = {
       errCode: ret.retCode,
-      userInfo: JSON.parse(ret.result),
+      userInfo: jsonStringToObj(ret.result),
     };
     return returnValue;
   }
@@ -3210,7 +3212,7 @@ export class AgoraRtcEngine extends EventEmitter {
    */
   convertDeviceInfoToObject(deviceInfo: string): Device {
     let _device: { deviceName: string; deviceId: string } =
-      JSON.parse(deviceInfo);
+      jsonStringToObj(deviceInfo);
     let realDevice: Device = {
       devicename: _device.deviceName,
       deviceid: _device.deviceId,
@@ -3331,7 +3333,7 @@ export class AgoraRtcEngine extends EventEmitter {
       ""
     );
     try {
-      const res: Array<any> = JSON.parse(ret.result);
+      const res: Array<any> = jsonStringToArray(ret.result);
       objsKeysToLowerCase(res);
       return res;
     } catch (error) {
@@ -3431,7 +3433,7 @@ export class AgoraRtcEngine extends EventEmitter {
       ""
     );
 
-    return JSON.parse(ret.result);
+    return jsonStringToArray(ret.result);
   }
 
   /**
@@ -3529,7 +3531,7 @@ export class AgoraRtcEngine extends EventEmitter {
       ""
     );
     try {
-      const res: Array<any> = JSON.parse(ret.result);
+      const res: Array<any> = jsonStringToArray(ret.result);
       objsKeysToLowerCase(res);
       return res;
     } catch (error) {
@@ -5806,7 +5808,7 @@ export class AgoraRtcEngine extends EventEmitter {
       ApiTypeRawDataPluginManager.kRDPMGetPlugins,
       ""
     );
-    let pluginIdArray: string[] = JSON.parse(ret.result);
+    let pluginIdArray: string[] = jsonStringToArray(ret.result);
 
     return pluginIdArray.map((item) => {
       return this.createPlugin(item);
@@ -6781,7 +6783,7 @@ export class AgoraRtcEngine extends EventEmitter {
       ApiTypeRawDataPluginManager.kRDPMGetPlugins,
       ""
     );
-    let pluginIdArray: string[] = JSON.parse(ret.result);
+    let pluginIdArray: string[] = jsonStringToArray(ret.result);
 
     return pluginIdArray.map((item) => {
       return this.createPlugin(item);
