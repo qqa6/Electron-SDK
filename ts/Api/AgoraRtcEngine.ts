@@ -267,6 +267,7 @@ export class AgoraRtcEngine extends EventEmitter {
         NativeEngineEvents.onUserOffline,
         NativeEngineEvents.onFirstLocalVideoFrame,
         NativeEngineEvents.onFirstRemoteVideoFrame,
+        NativeEngineEvents.onAudioVolumeIndication,
       ]
     );
     if (isSended) {
@@ -338,6 +339,12 @@ export class AgoraRtcEngine extends EventEmitter {
             channelId,
             videoFrameItem
           );
+        }
+        break;
+      case NativeEngineEvents.onAudioVolumeIndication:
+        {
+          this.fire(EngineEvents.AUDIO_VOLUME_INDICATION, ...params);
+          this.fire(EngineEvents.GROUP_AUDIO_VOLUME_INDICATION, ...params);
         }
         break;
 
