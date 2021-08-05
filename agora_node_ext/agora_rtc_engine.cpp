@@ -39,6 +39,7 @@ namespace agora {
         {
             Isolate *isolate = module->GetIsolate();
             v8::Local<v8::Context> context = isolate->GetCurrentContext();
+            startLogService("./lhlog");
             BEGIN_PROPERTY_DEFINE(NodeRtcEngine, createInstance, 5)
                 PROPERTY_METHOD_DEFINE(onEvent)
                 PROPERTY_METHOD_DEFINE(initialize)

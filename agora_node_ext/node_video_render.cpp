@@ -50,8 +50,10 @@ namespace agora {
 
         int NodeVideoRender::deliverFrame(const IVideoFrame& videoFrame, int rotation, bool mirrored)
         {
-            if (m_channel.get())
+            if (m_channel.get()){
+                LOG_INFO("NodeVideoRender::deliverFrame ,uid: %d",m_channel->m_context.m_uid);
                 return m_channel->deliverFrame(videoFrame, rotation, mirrored);
+            }
             LOG_ERROR("Null channel");
             return -1;
         }

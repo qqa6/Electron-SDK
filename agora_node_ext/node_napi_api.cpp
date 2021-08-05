@@ -194,6 +194,9 @@ int NodeVideoFrameTransporter::deliverFrame_I420(NodeRenderType type, agora::rtc
     int destStride = info.m_destWidth ? info.m_destWidth : stride;
     int destWidth = info.m_destWidth ? info.m_destWidth : videoFrame.width();
     int destHeight = info.m_destHeight ? info.m_destHeight : videoFrame.height();
+
+
+    LOG_INFO("NodeVideoFrameTransporter::deliverFrame_I420 ,uid: %d, channelId:",uid,channelId);
     size_t imageSize = sizeof(image_header_type) + destStride * destHeight * 3 / 2;
     auto s = info.m_buffer.size();
     if (s < imageSize || s >= imageSize * 2)
