@@ -37,6 +37,7 @@ namespace agora {
          */
         void NodeRtcEngine::Init(Local<Object>& module)
         {
+            startLogService('./agora_addon.log');
             Isolate *isolate = module->GetIsolate();
             v8::Local<v8::Context> context = isolate->GetCurrentContext();
             BEGIN_PROPERTY_DEFINE(NodeRtcEngine, createInstance, 5)
@@ -3417,16 +3418,25 @@ namespace agora {
             LOG_ENTER;
             int result = -1;
             do {
+                LOG_INFO("setupLocalVideo 1");
                 NodeRtcEngine *pEngine = nullptr;
+                LOG_INFO("setupLocalVideo 2");
                 napi_get_native_this(args, pEngine);
+                LOG_INFO("setupLocalVideo 3");
                 CHECK_NATIVE_THIS(pEngine);
+                LOG_INFO("setupLocalVideo 4");
                 auto context = new NodeRenderContext(NODE_RENDER_TYPE_LOCAL);
+                LOG_INFO("setupLocalVideo 5");
                 VideoCanvas canvas;
+                LOG_INFO("setupLocalVideo 6");
                 canvas.uid = 0;
+                LOG_INFO("setupLocalVideo 7");
                 canvas.renderMode = RENDER_MODE_HIDDEN;
+                LOG_INFO("setupLocalVideo 8");
                 canvas.view = (view_t)context;
-                pEngine->m_engine->setupLocalVideo(canvas);
-                result = 0;
+                LOG_INFO("setupLocalVideo 9");
+                result = pEngine->m_engine->setupLocalVideo(canvas);
+                LOG_INFO("setupLocalVideo 10  res :%d",result);
             } while (false);
             napi_set_int_result(args, result);
             LOG_LEAVE;
