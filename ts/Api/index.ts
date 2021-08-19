@@ -56,7 +56,8 @@ import {
   ScreenCaptureConfiguration,
   MEDIA_SOURCE_TYPE,
   Extension,
-  VIDEO_ORIENTATION
+  VIDEO_ORIENTATION,
+  BeautyOptions
 } from './native_type';
 import { EventEmitter } from 'events';
 import { deprecate, config, Config } from '../Utils';
@@ -1201,8 +1202,8 @@ class AgoraRtcEngine extends EventEmitter {
    *  - `ERR_INVALID_APP_ID (101)`: The app ID is invalid. Check if it is in 
    * the correct format.
    */
-  initialize(appid: string, extensions: Extension[] = [], areaCode: AREA_CODE = (0xFFFFFFFF)): number {
-    return this.rtcEngine.initialize(appid, extensions, areaCode);
+  initialize(appid: string, areaCode: AREA_CODE = (0xFFFFFFFF)): number {
+    return this.rtcEngine.initialize(appid, areaCode);
   }
 
   createMediaPlayer(): AgoraMediaPlayer {
@@ -4232,8 +4233,15 @@ class AgoraRtcEngine extends EventEmitter {
    * - 0: Success.
    * - < 0: Failure.
    */
- enableExtension(type: MEDIA_SOURCE_TYPE, id: string, enable: boolean): number {
-   return this.rtcEngine.enableExtension(type, id, enable);
+ enableExtension(provider_name: string, extension_name: string,enable :boolean , type : MEDIA_SOURCE_TYPE): number {
+   return this.rtcEngine.enableExtension(provider_name, extension_name, enable, type);
+ }
+
+ getExtensionProperty(provider_name: string, extension_name: string, key: string, json_value: string, type : MEDIA_SOURCE_TYPE): number {
+  return this.rtcEngine.getExtensionProperty(provider_name, extension_name, key, json_value, json_value.length, type);
+}
+ setBeautyEffectOptions(enabled :boolean, options :BeautyOptions, type : MEDIA_SOURCE_TYPE):number {
+   return this.rtcEngine.setBeautyEffectOptions(enabled, options, type);
  }
 
  /**
@@ -4246,10 +4254,15 @@ class AgoraRtcEngine extends EventEmitter {
    * - 0: Success.
    * - < 0: Failure.
    */
- setExtensionProperty(type: MEDIA_SOURCE_TYPE, key: string, jsonValue: string): number {
-   return this.rtcEngine.setExtensionProperty(type, key, jsonValue);
+ setExtensionProperty(provider_name: string, extension_name: string, key :string,json_value :string, type: MEDIA_SOURCE_TYPE): number {
+   return this.rtcEngine.setExtensionProperty(provider_name, extension_name, key, json_value, type);
  }
-
+ 
+ 
+ loadExtensionProvider(extension_lib_path: string): number {
+  return this.rtcEngine.loadExtensionProvider(extension_lib_path);
+}
+ 
  setAddonLogFile(filePath: string): void {
    this.rtcEngine.setAddonLogFile(filePath);
  }
