@@ -11,8 +11,7 @@ const { electronVersion, platform, packageVersion, arch, no_symbol } =
 
 const workspaceDir = `${path.join(__dirname, "..")}`;
 
-const addonVersion = "3.4.6-iris.727-build.3";
-
+const addonVersion = "3.4.6-iris.830-build.1";
 const getDownloadURL = () => {
   let downloadUrl = `http://download.agora.io/sdk/release/Electron-${getOS()}-${addonVersion}-${electronVersion}.zip`;
   if (platform === "win32" && arch === "x64") {
@@ -25,6 +24,7 @@ const verList = [
   "12.0.0",
   "11.0.0",
   "10.2.0",
+  "9.4.2",
   "9.0.0",
   "7.1.2",
   "6.1.7",
