@@ -90,7 +90,7 @@ namespace agora {
             NAPI_API(complain);
             NAPI_API(setEncryptionSecret);
             NAPI_API(createDataStream);
-            NAPI_API(sendStreamMessage);       
+            NAPI_API(sendStreamMessage);
             NAPI_API(setEncryptionMode);
 
             NAPI_API(configPublisher);
@@ -102,7 +102,7 @@ namespace agora {
             NAPI_API(setLiveTranscoding);
             NAPI_API(addInjectStreamUrl);
             NAPI_API(removeInjectStreamUrl);
-            
+
             /*
             * Wrapper for RtcEngineParameter API
             */
@@ -150,17 +150,17 @@ namespace agora {
             NAPI_API(getAudioMixingDuration);
             NAPI_API(getAudioMixingCurrentPosition);
             NAPI_API(setAudioMixingPosition);
-            NAPI_API(getEffectsVolume);	
-            NAPI_API(setEffectsVolume);	
+            NAPI_API(getEffectsVolume);
+            NAPI_API(setEffectsVolume);
             NAPI_API(setVolumeOfEffect);
-            NAPI_API(playEffect);	
-            NAPI_API(stopEffect);	
-            NAPI_API(stopAllEffects);	
-            NAPI_API(preloadEffect);	
-            NAPI_API(unloadEffect);	
-            NAPI_API(pauseEffect);	
-            NAPI_API(pauseAllEffects);	
-            NAPI_API(resumeEffect);	
+            NAPI_API(playEffect);
+            NAPI_API(stopEffect);
+            NAPI_API(stopAllEffects);
+            NAPI_API(preloadEffect);
+            NAPI_API(unloadEffect);
+            NAPI_API(pauseEffect);
+            NAPI_API(pauseAllEffects);
+            NAPI_API(resumeEffect);
             NAPI_API(resumeAllEffects);
             NAPI_API(setLocalVoicePitch);
             NAPI_API(setLocalVoiceEqualization);
@@ -182,7 +182,7 @@ namespace agora {
             NAPI_API(setLogFilter);
 
             NAPI_API(setLocalVideoMirrorMode);
-            
+
             NAPI_API(enableDualStreamMode);
             NAPI_API(setRecordingAudioFrameParameters);
             NAPI_API(setPlaybackAudioFrameParameters);
@@ -322,6 +322,7 @@ namespace agora {
             NAPI_API(updateLocalTranscoderConfiguration);
             NAPI_API(stopLocalVideoTranscoder);
             NAPI_API(joinChannelEx);
+            NAPI_API(leaveChannelEx);
             NAPI_API(joinChannel2);
             NAPI_API(updateChannelMediaOptions);
 
@@ -741,7 +742,7 @@ typedef unsigned int uint32;
         } while (false);\
         LOG_LEAVE;\
     }
-        
+
 #define NAPI_API_DEFINE_WRAPPER_SET_PARAMETER_1(method, type) \
     NAPI_API_DEFINE(NodeRtcEngine, method) \
     {\
@@ -845,7 +846,7 @@ typedef unsigned int uint32;
         napi_set_int_result(args, result);\
         LOG_LEAVE;\
     }
-        
+
 #define NAPI_API_CHANNEL_DEFINE_WRAPPER_1(method, type) \
     NAPI_API_DEFINE(NodeRtcChannel, method) \
     {\
