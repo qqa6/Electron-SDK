@@ -121,6 +121,7 @@
                                 'av1.framework',
                                 'AppKit.framework',
                                 'CoreGraphics.framework',
+                                'AgoraVideoSegmentationExtension.framework'
                             ]
                         },
                         'include_dirs':[
@@ -208,7 +209,8 @@
                                 './sdk/lib/win32/library/av1.dll',
                                 './sdk/lib/win32/library/libagora_ai_denoise_extension.dll',
                                 './sdk/lib/win32/library/libagora_dav1d_extension.dll',
-                                './sdk/lib/win32/library/libagora-core.dll'
+                                './sdk/lib/win32/library/libagora-core.dll',
+                                './sdk/lib/win32/library/libagora_segmentation_extension.dll',
                             ]
                         }],
                         'link_settings': {
@@ -285,7 +287,8 @@
                                 './sdk/lib/mac/Agoraffmpeg.framework',
                                 './sdk/lib/mac/AgoraRtcKit.framework',
                                 './sdk/lib/mac/AgoraSoundTouch.framework',
-                                './sdk/lib/mac/av1.framework'
+                                './sdk/lib/mac/av1.framework',
+                                './sdk/lib/mac/AgoraVideoSegmentationExtension.framework'
                             ]
                         }],
                         'link_settings': {
@@ -300,6 +303,7 @@
                                 'av1.framework',
                                 'AppKit.framework',
                                 'CoreGraphics.framework',
+                                'AgoraVideoSegmentationExtension.framework'
                             ]
                         },
                         'sources': [
