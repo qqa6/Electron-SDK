@@ -48,10 +48,7 @@ task('sync:lib', () => {
 task("build:electron", async () => {
   await cleanup(path.join(__dirname, "./build"));
   const electronVersion = argv().electron_version;
-  const isOver11 = semver.satisfies(
-    semver.coerce(electronVersion).version,
-    ">=11.0.0"
-  );
+  const isOver11 = true
 
   build({
     electronVersion,
