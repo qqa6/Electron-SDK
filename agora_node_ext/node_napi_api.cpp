@@ -409,13 +409,13 @@ bool AddObj(Isolate* isolate, Local<v8::Array>& infos, int index, VideoFrameInfo
         NODE_SET_OBJ_PROP_UINT32(obj, "uid", info.m_uid);
         NODE_SET_OBJ_PROP_STRING(obj, "channelId", info.m_channelId.c_str());
         auto it = info.m_bufferList.begin();
-        NODE_SET_OBJ_PROP_HEADER(obj, it);
-        ++it;
-        NODE_SET_OBJ_PROP_DATA(obj, "ydata", it);
-        ++it;
-        NODE_SET_OBJ_PROP_DATA(obj, "udata", it);
-        ++it;
-        NODE_SET_OBJ_PROP_DATA(obj, "vdata", it);
+        // NODE_SET_OBJ_PROP_HEADER(obj, it);
+        // ++it;
+        // NODE_SET_OBJ_PROP_DATA(obj, "ydata", it);
+        // ++it;
+        // NODE_SET_OBJ_PROP_DATA(obj, "udata", it);
+        // ++it;
+        // NODE_SET_OBJ_PROP_DATA(obj, "vdata", it);
         result = infos->Set(isolate->GetCurrentContext(), index, obj).FromJust();
     }while(false);
     return result;
@@ -748,15 +748,15 @@ napi_status napi_get_object_property_nodestring_(Isolate* isolate, const Local<O
 
 napi_status napi_get_object_property_arraybuffer_(Isolate* isolate, const Local<Object>& obj, const std::string& propName, void* buffer)
 {
-    Local<Value> value = napi_get_object_property_value(isolate, obj, propName);
+    // Local<Value> value = napi_get_object_property_value(isolate, obj, propName);
 
-    if (!value->IsArrayBuffer()) {
-        return napi_invalid_arg;
-    }
+    // if (!value->IsArrayBuffer()) {
+    //     return napi_invalid_arg;
+    // }
     
-    auto localBuf = Local<v8::ArrayBuffer>::Cast(value);
-    auto buf = *localBuf;
-    memcpy(buffer, buf->GetContents().Data(), buf->GetContents().ByteLength());
+    // auto localBuf = Local<v8::ArrayBuffer>::Cast(value);
+    // auto buf = *localBuf;
+    // memcpy(buffer, buf->GetContents().Data(), buf->GetContents().ByteLength());
     return napi_ok;
 }
 
