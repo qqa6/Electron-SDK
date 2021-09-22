@@ -30,6 +30,7 @@
 #include "AVPlugin/IAVFramePlugin.h"
 #include "node_metadata_observer.h"
 #include "windows_system_api.h"
+#include <node_buffer.h>
 /*
 * Used to declare native interface to nodejs
 */

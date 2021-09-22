@@ -4873,21 +4873,19 @@ namespace agora {
         } \
     }
 
-    void bufferToArrayBuffer(Local<v8::ArrayBuffer>& buff, void *buffer, int length) {
-#if (NODE_MODULE_VERSION > 87) 
-        memcpy(buff->GetBackingStore()->Data(), buffer, length); 
-#else 
-        memcpy(buff->GetContents().Data(), buffer, length); 
-#endif 
-    }
+//     void bufferToArrayBuffer(Local<v8::ArrayBuffer>& buff, void *buffer, int length) {
+// #if (NODE_MODULE_VERSION > 87) 
+//         memcpy(buff->GetBackingStore()->Data(), buffer, length); 
+// #else 
+//         memcpy(buff->GetContents().Data(), buffer, length); 
+// #endif 
+//     }
 
 #define NODE_SET_OBJ_WINDOWINFO_DATA(isolate, obj, name, info) \
     { \
         Local<Value> propName = String::NewFromUtf8(isolate, name, NewStringType::kInternalized).ToLocalChecked(); \
-        Local<v8::ArrayBuffer> buff = v8::ArrayBuffer::New(isolate, info.length); \
-        bufferToArrayBuffer(buff, info.buffer, info.length); \
-        Local<v8::Uint8Array> dataarray = v8::Uint8Array::New(buff, 0, info.length);\
-        v8::Maybe<bool> ret = obj->Set(isolate->GetCurrentContext(), propName, dataarray); \
+        auto nodeBuffer = node::Buffer::New(isolate, (char *)info.buffer, info.length);\
+        v8::Maybe<bool> ret = obj->Set(isolate->GetCurrentContext(), propName, nodeBuffer.ToLocalChecked()); \
         if(!ret.IsNothing()) { \
             if(!ret.ToChecked()) { \
                 break; \
