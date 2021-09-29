@@ -3,6 +3,7 @@ import AgoraRtcEngine from '../../../';
 import { List } from 'immutable';
 import path from 'path';
 import os from 'os'
+import {ipcRenderer} from 'electron'
 
 import {voiceChangerList, voiceReverbPreset, videoProfileList, audioProfileList, audioScenarioList, APP_ID, SHARE_ID, RTMP_URL, voiceReverbList, FU_AUTH } from '../utils/settings'
 import {readImage} from '../utils/base64'
@@ -87,9 +88,12 @@ export default class App extends Component {
       });
     });
     rtcEngine.on('writeLog', (message, length) => {
-      console.log(`\nwriteLog(${length}): xxxx${message}xxxxxxx`)
-      console.log(`self :${message.length}`);
+      ipcRenderer.send("asynchronous-message", message);
     });
+    ipcRenderer.on("asynchronous-reply", function(event, arg) {
+      // 这里的arg是从主线程请求的数据
+          console.log("render+" + arg);
+      });
     rtcEngine.on('userjoined', (uid, elapsed) => {
       if (uid === SHARE_ID && this.state.localSharing) {
         return
