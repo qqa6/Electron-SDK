@@ -13,7 +13,7 @@ ipcMain.on("asynchronous-message", function(event, arg) {
 
   let str = 'arg';
   str = arg;
-  fs.appendFile(filepath,"", "utf8",(err)=>{
+  fs.appendFile(filepath,arg, "binary",(err)=>{
     if(err){
        event.sender.send('asynchronous-reply', "写入失败");
     }else {
