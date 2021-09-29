@@ -175,7 +175,24 @@ namespace agora {
         void NodeEventHandler::writeLog(const char* message, uint16_t length)
         {
             FUNC_TRACE;
-            MAKE_JS_CALL_2(RTC_EVENT_WRITE_LOG, string, message, uid, length);
+//            MAKE_JS_CALL_2(RTC_EVENT_WRITE_LOG, string, message, uid, length);
+            
+            
+            node_async_call::async_call([this, message, length]() {
+                auto it = m_callbacks.find(RTC_EVENT_WRITE_LOG);
+                if (it != m_callbacks.end()) {
+                    Isolate *isolate = Isolate::GetCurrent();
+                    HandleScope scope(isolate);
+                    Local<Context> context = isolate->GetCurrentContext();
+                    Local<Value> argv[2]{ napi_create_string_(isolate, message),
+                                          napi_create_uid_(isolate, length)
+                                        };
+                    NodeEventCallback& cb = *it->second;
+                    cb.callback.Get(isolate)->Call(context, cb.js_this.Get(isolate), 2, argv);
+                }
+            });
+            
+            
         }
         void NodeEventHandler::onJoinChannelSuccess_node(const char* channel, uid_t id, int elapsed)
         {
