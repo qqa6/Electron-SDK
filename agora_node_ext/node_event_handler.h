@@ -20,6 +20,7 @@
 #include "agora_video_source.h"
 namespace agora {
     namespace rtc {
+#define RTC_EVENT_WRITE_LOG "writeLog"
 #define RTC_EVENT_JOIN_CHANNEL "joinchannel"
 #define RTC_EVENT_REJOIN_CHANNEL "rejoinchannel"
 #define RTC_EVENT_WARNING "warning"
@@ -129,6 +130,7 @@ namespace agora {
         public:
             NodeEventHandler(NodeRtcEngine* pEngine);
             ~NodeEventHandler();
+            void writeLog(const char* message, uint16_t length);
             virtual void onJoinChannelSuccess(const char* channel, uid_t uid, int elapsed) override;
             virtual void onRejoinChannelSuccess(const char* channel, uid_t uid, int elapsed) override;
             virtual void onWarning(int warn, const char* msg) override;

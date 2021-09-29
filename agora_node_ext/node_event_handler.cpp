@@ -171,7 +171,12 @@ namespace agora {
             } \
         } \
     }
-
+  
+        void NodeEventHandler::writeLog(const char* message, uint16_t length)
+        {
+            FUNC_TRACE;
+            MAKE_JS_CALL_2(RTC_EVENT_WRITE_LOG, string, message, uid, length);
+        }
         void NodeEventHandler::onJoinChannelSuccess_node(const char* channel, uid_t id, int elapsed)
         {
             FUNC_TRACE;

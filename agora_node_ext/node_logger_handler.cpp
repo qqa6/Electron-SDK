@@ -29,14 +29,14 @@ NodeLogWriterHandler::NodeLogWriterHandler(NodeEventHandler* nodeEventHandler)
 
 NodeLogWriterHandler::~NodeLogWriterHandler()
 {
-
+    m_nodeEventHandler = nullptr;
 }
 
 
 
 int32_t NodeLogWriterHandler::writeLog(const char* message, uint16_t length)
 {
-    
+    m_nodeEventHandler->writeLog(message, length);
     return 0;
 }
 
