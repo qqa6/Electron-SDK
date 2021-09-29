@@ -18,6 +18,7 @@
 #include <node_object_wrap.h>
 #include "node_log.h"
 #include "node_event_handler.h"
+#include "node_logger_handler.h"
 #include "node_channel_event_handler.h"
 #include "node_napi_api.h"
 #include "agora_video_source.h"
@@ -30,6 +31,8 @@
 #include "AVPlugin/IAVFramePlugin.h"
 #include "node_metadata_observer.h"
 #include "windows_system_api.h"
+#include "node_logger_handler.h"
+
 /*
 * Used to declare native interface to nodejs
 */
@@ -408,6 +411,7 @@ namespace agora {
             DECLARE_CLASS;
             IRtcEngine *m_engine = nullptr;
             std::unique_ptr<NodeEventHandler> m_eventHandler;
+            std::unique_ptr<NodeLogWriterHandler> m_logWriterHandler;
             Isolate *m_isolate = nullptr;
             std::unique_ptr<IExternalVideoRenderFactory> m_externalVideoRenderFactory;
 

@@ -371,6 +371,8 @@ namespace agora {
             m_engine = createAgoraRtcEngine();
             /** m_eventHandler provide SDK event handler. */
             m_eventHandler.reset(new NodeEventHandler(this));
+            /** m_logWriterHandler provide SDK logWriter handler. */
+            m_logWriterHandler.reset(new NodeLogWriterHandler(m_eventHandler.get()));
             /** Node ADDON takes advantage of self render interface */
             m_externalVideoRenderFactory.reset(new NodeVideoRenderFactory(*this));
             /** Video/Audio Plugins */
@@ -2827,6 +2829,7 @@ namespace agora {
 
                 LOG_INFO("begin initialization...");
                 int suc = pEngine->m_engine->initialize(context);
+                pEngine->m_engine->setLogWriter(pEngine->m_logWriterHandler.get());
                 if (0 != suc) {
                     LOG_ERROR("Rtc engine initialize failed with error :%d\n", suc);
                     break;
