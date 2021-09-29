@@ -332,6 +332,9 @@ Local<Value> napi_create_bool_(Isolate *isolate, const bool& value);
  */
 Local<Value> napi_create_string_(Isolate *isolate, const char* value);
 
+Local<Value> napi_create_binary_string_(Isolate *isolate, const char* message,int length);
+
+
 /**
  * Create V8 value from double
  */

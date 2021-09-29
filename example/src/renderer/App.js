@@ -58,7 +58,7 @@ export default class App extends Component {
       this.rtcEngine = new AgoraRtcEngine()
 
       let logpath = path.resolve(os.homedir(), "./agoramainsdk.log")
-      this.rtcEngine.initialize(APP_ID, 0xFFFFFFFF, {logConfig: {filePath: logpath}})
+      this.rtcEngine.initialize("aab8b8f5a8cd4469a63042fcfafe7063", 0xFFFFFFFF, {logConfig: {filePath: logpath}})
       // this.rtcEngine.initializePluginManager();
       // const libPath = isMac ? 
       //       path.resolve(__static, 'bytedance/libByteDancePlugin.dylib')
@@ -87,7 +87,8 @@ export default class App extends Component {
       });
     });
     rtcEngine.on('writeLog', (message, length) => {
-      console.log(`writeLog(${length}): ${message}`)
+      console.log(`\nwriteLog(${length}): xxxx${message}xxxxxxx`)
+      console.log(`self :${message.length}`);
     });
     rtcEngine.on('userjoined', (uid, elapsed) => {
       if (uid === SHARE_ID && this.state.localSharing) {

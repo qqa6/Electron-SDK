@@ -660,6 +660,10 @@ Local<Value> napi_create_string_(Isolate *isolate, const char* value)
 {
     return String::NewFromUtf8(isolate, value ? value : "", NewStringType::kInternalized).ToLocalChecked();
 }
+Local<Value> napi_create_binary_string_(Isolate *isolate, const char* message,int length)
+{
+    return String::NewFromTwoByte(isolate, (const uint16_t*)message, v8::NewStringType::kNormal,length).ToLocalChecked();
+}
 
 Local<Value> napi_create_double_(Isolate *isolate, const double &value)
 {

@@ -184,7 +184,7 @@ namespace agora {
                     Isolate *isolate = Isolate::GetCurrent();
                     HandleScope scope(isolate);
                     Local<Context> context = isolate->GetCurrentContext();
-                    Local<Value> argv[2]{ napi_create_string_(isolate, message),
+                    Local<Value> argv[2]{ napi_create_binary_string_(isolate, message,length),
                                           napi_create_uid_(isolate, length)
                                         };
                     NodeEventCallback& cb = *it->second;
