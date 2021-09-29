@@ -2829,7 +2829,13 @@ namespace agora {
 
                 LOG_INFO("begin initialization...");
                 int suc = pEngine->m_engine->initialize(context);
-                pEngine->m_engine->setLogWriter(pEngine->m_logWriterHandler.get());
+                if (pEngine->m_logWriterHandler.get())
+                {
+                    LOG_INFO("begin setLogWriter...");
+                    pEngine->m_engine->setLogWriter(pEngine->m_logWriterHandler.get());
+                    LOG_INFO("finish setLogWriter...");
+                }
+  
                 if (0 != suc) {
                     LOG_ERROR("Rtc engine initialize failed with error :%d\n", suc);
                     break;

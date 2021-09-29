@@ -226,6 +226,12 @@ class AgoraRtcEngine extends EventEmitter {
               to see if it matches properly.`);
     });
 
+    this.rtcEngine.onEvent('writeLog', function(
+      message: string,
+      length: number
+    ) {
+      fire('writeLog', message, length);
+    });
     this.rtcEngine.onEvent('joinchannel', function(
       channel: string,
       uid: number,
@@ -6166,6 +6172,11 @@ declare interface AgoraRtcEngine {
     evt: 'joinedChannel',
     cb: (channel: string, uid: number, elapsed: number) => void
   ): this;
+  on(
+    evt: 'writeLog',
+    cb: (message: string, length: number) => void
+  ): this;
+
   /** Occurs when a user rejoins the channel after disconnection due to network
    * problems.
    * When a user loses connection with the server because of network problems,

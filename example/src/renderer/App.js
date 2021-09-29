@@ -17,7 +17,7 @@ export default class App extends Component {
     if (!APP_ID) {
       alert('APP_ID cannot be empty!')
     } else {
-      let rtcEngine = this.getRtcEngine()
+      // let rtcEngine = this.getRtcEngine()
       let channel1
       let channel2
       this.state = {
@@ -29,9 +29,9 @@ export default class App extends Component {
         role: 1,
         voiceReverbPreset: 0,
         voiceChangerPreset: 0,
-        videoDevices: rtcEngine.getVideoDevices(),
-        audioDevices: rtcEngine.getAudioRecordingDevices(),
-        audioPlaybackDevices: rtcEngine.getAudioPlaybackDevices(),
+        videoDevices: [],
+        audioDevices: [],
+        audioPlaybackDevices: [],
         camera: 0,
         mic: 0,
         speaker: 0,
@@ -59,16 +59,16 @@ export default class App extends Component {
 
       let logpath = path.resolve(os.homedir(), "./agoramainsdk.log")
       this.rtcEngine.initialize(APP_ID, 0xFFFFFFFF, {logConfig: {filePath: logpath}})
-      this.rtcEngine.initializePluginManager();
-      const libPath = isMac ? 
-            path.resolve(__static, 'bytedance/libByteDancePlugin.dylib')
-          : path.resolve(__static, 'bytedance/ByteDancePlugin.dll')
-      if(this.rtcEngine.registerPlugin({
-        id: 'bytedance',
-        path: libPath
-      }) < 0){
-        console.error(`load plugin failed`)
-      }
+      // this.rtcEngine.initializePluginManager();
+      // const libPath = isMac ? 
+      //       path.resolve(__static, 'bytedance/libByteDancePlugin.dylib')
+      //     : path.resolve(__static, 'bytedance/ByteDancePlugin.dll')
+      // if(this.rtcEngine.registerPlugin({
+      //   id: 'bytedance',
+      //   path: libPath
+      // }) < 0){
+      //   console.error(`load plugin failed`)
+      // }
       this.subscribeEvents(this.rtcEngine)
       window.rtcEngine = this.rtcEngine;
     }
@@ -85,6 +85,9 @@ export default class App extends Component {
       this.setState({
         local: uid
       });
+    });
+    rtcEngine.on('writeLog', (message, length) => {
+      console.log(`writeLog(${length}): ${message}`)
     });
     rtcEngine.on('userjoined', (uid, elapsed) => {
       if (uid === SHARE_ID && this.state.localSharing) {
@@ -624,68 +627,8 @@ export default class App extends Component {
   }
 
   handleRtmp = () => {
-    const url = RTMP_URL
-    if(!url) {
-      alert("RTMP URL Empty")
-      return
-    }
-    if(!this.state.rtmpTestOn) {
-      this.rtcEngine.setLiveTranscoding({
-        /** width of canvas */
-        width: 640,
-        /** height of canvas */
-        height: 480,
-        /** kbps value, for 1-1 mapping pls look at https://docs.agora.io/cn/Interactive%20Broadcast/API%20Reference/cpp/structagora_1_1rtc_1_1_video_encoder_configuration.html */
-        videoBitrate: 500,
-        /** fps, default 15 */
-        videoFrameRate: 15,
-        /** true for low latency, no video quality garanteed; false - high latency, video quality garanteed */
-        lowLatency: true,
-        /** Video GOP in frames, default 30 */
-        videoGop: 30,
-        videoCodecProfile: 77,
-        /**
-         * RGB hex value. Value only, do not include a #. For example, 0xC0C0C0.
-         * number color = (A & 0xff) << 24 | (R & 0xff) << 16 | (G & 0xff) << 8 | (B & 0xff)
-         */
-        backgroundColor: 0xc0c0c0,
-        /** The number of users in the live broadcast */
-        userCount: 1,
-        audioSampleRate: 44800,
-        audioChannels: 1,
-        audioBitrate: 48,
-        /** transcodingusers array */
-        transcodingUsers: [
-          {
-            uid: this.state.local,
-            x: 0,
-            y: 0,
-            width: 320,
-            height: 240,
-            zOrder: 1,
-            alpha: 1,
-            audioChannel: 1
-          }
-        ],
-        watermark: {
-          url: "",
-          x: 0,
-          y:0,
-          width: 0,
-          height: 0
-        }
-      });
-      this.rtcEngine.addPublishStreamUrl(
-        url,
-        true
-      );
-    } else {
-      this.rtcEngine.removePublishStreamUrl(url)
-    }
     
-    this.setState({
-      rtmpTestOn: !this.state.rtmpTestOn
-    })
+    this.getRtcEngine();
   }
 
   handleWindowPicker = windowId => {

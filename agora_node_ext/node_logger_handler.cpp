@@ -36,7 +36,8 @@ NodeLogWriterHandler::~NodeLogWriterHandler()
 
 int32_t NodeLogWriterHandler::writeLog(const char* message, uint16_t length)
 {
-    m_nodeEventHandler->writeLog(message, length);
+    std::string msgStr;
+    m_nodeEventHandler->writeLog(msgStr.c_str(), length);
     return 0;
 }
 
