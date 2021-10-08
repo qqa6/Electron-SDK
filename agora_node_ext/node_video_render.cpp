@@ -10,11 +10,13 @@
 
 #include "node_video_render.h"
 #include "node_napi_api.h"
+#include "loguru.hpp"
 
 namespace agora {
     namespace rtc {
         bool NodeVideoFrameObserver::onCaptureVideoFrame(agora::media::IVideoFrameObserver::VideoFrame& videoFrame) 
         {
+            LOG_F(INFO, "onCaptureVideoFrame");
             auto *pTransporter = getNodeVideoFrameTransporter();
             pTransporter->deliverFrame_I420(NodeRenderType::NODE_RENDER_TYPE_LOCAL, "", 0, 0, videoFrame);
 
@@ -30,6 +32,7 @@ namespace agora {
 
         bool NodeVideoFrameObserver::onRenderVideoFrame(const char* channelId, rtc::uid_t remoteUid, agora::media::IVideoFrameObserver::VideoFrame& videoFrame)
         {
+            LOG_F(INFO, "onRenderVideoFrame channelId: %s, uid: %u", channelId, remoteUid);
             auto *pTransporter = getNodeVideoFrameTransporter();
             pTransporter->deliverFrame_I420(NodeRenderType::NODE_RENDER_TYPE_REMOTE, channelId,remoteUid, 0, videoFrame);
 
