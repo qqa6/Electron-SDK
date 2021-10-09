@@ -2,7 +2,7 @@
  * @Author: zhangtao@agora.io
  * @Date: 2021-04-22 20:53:37
  * @Last Modified by: zhangtao@agora.io
- * @Last Modified time: 2021-09-22 23:25:50
+ * @Last Modified time: 2021-10-09 19:33:25
  */
 #include "node_iris_rtc_engine.h"
 #include <assert.h>
@@ -12,13 +12,22 @@
 namespace agora {
 namespace rtc {
 namespace electron {
+
+#define RETURE_NAPI_OBJ()                                         \
+    auto env = info.Env();\
+    auto obj = Napi::Object::New(env);\
+    obj.Set(_ret_code_str, ret);\
+    obj.Set(_ret_result_str, result);\
+    return obj;
+
+
 using namespace iris::rtc;
 
 const char* NodeIrisRtcEngine::_class_name = "NodeIrisRtcEngine";
 const char* NodeIrisRtcEngine::_ret_code_str = "retCode";
 const char* NodeIrisRtcEngine::_ret_result_str = "result";
 
-NodeIrisRtcEngine::NodeIrisRtcEngine() {
+NodeIrisRtcEngine::NodeIrisRtcEngine(const Napi::CallbackInfo& info) : Napi::ObjectWrap<NodeIrisRtcEngine>(info){
     LOG_F(INFO, "NodeIrisRtcEngine::NodeIrisRtcEngine()");
     _iris_event_handler = std::make_shared<NodeIrisEventHandler>(this);
     _iris_engine = std::make_shared<IrisRtcEngine>();
@@ -32,131 +41,55 @@ NodeIrisRtcEngine::~NodeIrisRtcEngine() {
     LOG_F(INFO, "NodeIrisRtcEngine::~NodeIrisRtcEngine");
 }
 
-napi_value NodeIrisRtcEngine::Init(napi_env env, napi_value exports) {
-    napi_status status;
-    napi_property_descriptor properties[] = {
-        DECLARE_NAPI_METHOD("CallApi", CallApi),
-        DECLARE_NAPI_METHOD("CallApiWithBuffer", CallApiWithBuffer),
-        DECLARE_NAPI_METHOD("OnEvent", OnEvent),
-        DECLARE_NAPI_METHOD("CreateChannel", CreateChannel),
-        DECLARE_NAPI_METHOD("GetDeviceManager", GetDeviceManager),
-        DECLARE_NAPI_METHOD("GetScreenWindowsInfo", GetScreenWindowsInfo),
-        DECLARE_NAPI_METHOD("GetScreenDisplaysInfo", GetScreenDisplaysInfo),
-        DECLARE_NAPI_METHOD("EnableVideoFrameCache", EnableVideoFrameCache),
-        DECLARE_NAPI_METHOD("DisableVideoFrameCache", DisableVideoFrameCache),
-        DECLARE_NAPI_METHOD("GetVideoStreamData", GetVideoStreamData),
-        DECLARE_NAPI_METHOD("SetAddonLogFile", SetAddonLogFile),
-        DECLARE_NAPI_METHOD("PluginCallApi", PluginCallApi),
-        DECLARE_NAPI_METHOD("VideoSourceInitialize", VideoSourceInitialize),
-        DECLARE_NAPI_METHOD("VideoSourceRelease", VideoSourceRelease),
-        DECLARE_NAPI_METHOD("VideoSourceSetAddonLogFile",
-                            VideoSourceSetAddonLogFile),
-        DECLARE_NAPI_METHOD("Release", Release)};
-    
-    napi_value cons;
-    status = napi_define_class(env, _class_name, NAPI_AUTO_LENGTH, New, nullptr,
-                               16, properties, &cons);
-    assert(status == napi_ok);
-    
-    napi_ref* constructor = new napi_ref();
-    status = napi_create_reference(env, cons, 1, constructor);
-    assert(status == napi_ok);
-    
-    status = napi_set_instance_data(
-                                    env, constructor,
-                                    [](napi_env env, void* data, void* hint) {
-        napi_ref* constructor = static_cast<napi_ref*>(data);
-        napi_status status = napi_delete_reference(env, *constructor);
-        assert(status == napi_ok);
-        delete constructor;
-    },
-                                    nullptr);
-    
-    assert(status == napi_ok);
-    
-    status = napi_set_named_property(env, exports, _class_name, cons);
-    assert(status == napi_ok);
-    return exports;
+Napi::Object NodeIrisRtcEngine::Init(Napi::Env env, Napi::Object exports) {
+    Napi::Function func = DefineClass(env, "NodeIrisRtcEngine", {
+        InstanceMethod("CallApi", &NodeIrisRtcEngine::CallApi),
+        InstanceMethod("CallApiWithBuffer", &NodeIrisRtcEngine::CallApiWithBuffer),
+        InstanceMethod("OnEvent", &NodeIrisRtcEngine::OnEvent),
+        InstanceMethod("CreateChannel", &NodeIrisRtcEngine::CreateChannel),
+        InstanceMethod("GetDeviceManager", &NodeIrisRtcEngine::GetDeviceManager),
+        InstanceMethod("GetScreenWindowsInfo", &NodeIrisRtcEngine::GetScreenWindowsInfo),
+        InstanceMethod("GetScreenDisplaysInfo", &NodeIrisRtcEngine::GetScreenDisplaysInfo),
+        InstanceMethod("EnableVideoFrameCache", &NodeIrisRtcEngine::EnableVideoFrameCache),
+        InstanceMethod("DisableVideoFrameCache", &NodeIrisRtcEngine::DisableVideoFrameCache),
+        InstanceMethod("GetVideoStreamData", &NodeIrisRtcEngine::GetVideoStreamData),
+        InstanceMethod("SetAddonLogFile", &NodeIrisRtcEngine::SetAddonLogFile),
+        InstanceMethod("PluginCallApi", &NodeIrisRtcEngine::PluginCallApi),
+        InstanceMethod("VideoSourceInitialize", &NodeIrisRtcEngine::VideoSourceInitialize),
+        InstanceMethod("VideoSourceRelease", &NodeIrisRtcEngine::VideoSourceRelease),
+        InstanceMethod("VideoSourceSetAddonLogFile",
+                            &NodeIrisRtcEngine::VideoSourceSetAddonLogFile),
+        InstanceMethod("Release", &NodeIrisRtcEngine::Release)});
+
+        Napi::FunctionReference* constructor = new Napi::FunctionReference();
+        *constructor = Napi::Persistent(func);
+        env.SetInstanceData(constructor);
+
+        exports.Set("NodeIrisRtcEngine", func);
+        return exports;
 }
 
-napi_value NodeIrisRtcEngine::New(napi_env env, napi_callback_info info) {
-    napi_status status;
-    napi_value target;
-    status = napi_get_new_target(env, info, &target);
-    assert(status == napi_ok);
-    bool is_constructor = target != nullptr;
-    
-    if (is_constructor) {
-        LOG_F(INFO, "New");
-        napi_value jsthis;
-        status = napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr);
-        assert(status == napi_ok);
-        
-        auto iris_engine = new NodeIrisRtcEngine();
-        iris_engine->_env = env;
-        status =
-        napi_wrap(env, jsthis, reinterpret_cast<void*>(iris_engine),
-                  NodeIrisRtcEngine::Destructor, nullptr, &iris_engine->_ref);
-        assert(status == napi_ok);
-    } else {
-        napi_value instance;
-        status = napi_new_instance(env, Constructor(env), 0, nullptr, &instance);
-        assert(status == napi_ok);
-        return instance;
-    }
-}
-
-napi_value NodeIrisRtcEngine::Constructor(napi_env env) {
-    void* instance = nullptr;
-    napi_status status = napi_get_instance_data(env, &instance);
-    assert(status == napi_ok);
-    napi_ref* constructor = static_cast<napi_ref*>(instance);
-    
-    napi_value cons;
-    status = napi_get_reference_value(env, *constructor, &cons);
-    assert(status == napi_ok);
-    return cons;
-}
-
-void NodeIrisRtcEngine::Destructor(napi_env env,
-                                   void* nativeObject,
-                                   void* finalize_hint) {
-    reinterpret_cast<NodeIrisRtcEngine*>(nativeObject)->~NodeIrisRtcEngine();
-}
-
-napi_value NodeIrisRtcEngine::CallApi(napi_env env, napi_callback_info info) {
-    napi_status status;
-    size_t argc = 3;
-    napi_value args[3];
-    napi_value jsthis;
-    status = napi_get_cb_info(env, info, &argc, args, &jsthis, nullptr);
-    assert(status == napi_ok);
-    
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    
+Napi::Value NodeIrisRtcEngine::CallApi(const Napi::CallbackInfo& info) {
     int process_type = 0;
     int api_type = 0;
     std::string parameter = "";
     
-    status = napi_get_value_int32(env, args[0], &process_type);
-    status = napi_get_value_int32(env, args[1], &api_type);
-    status = napi_get_value_utf8string(env, args[2], parameter);
+    napi_get_value_int32(info[0], process_type);
+    napi_get_value_int32(info[1], api_type);
+    napi_get_value_utf8_string(info[2], parameter);
     
     char result[512];
     memset(result, '\0', 512);
-    
     int ret = ERROR_PARAMETER_1;
     
-    if (nodeIrisRtcEngine->_iris_engine) {
+    if (this->_iris_engine) {
         try {
             if (process_type == PROCESS_TYPE::MAIN) {
-                ret = nodeIrisRtcEngine->_iris_engine->CallApi(
+                ret = this->_iris_engine->CallApi(
                                                                (ApiTypeEngine)api_type, parameter.c_str(), result);
             } else {
-                if (nodeIrisRtcEngine->_video_source_proxy) {
-                    ret = nodeIrisRtcEngine->_video_source_proxy->CallApi(
+                if (this->_video_source_proxy) {
+                    ret = this->_video_source_proxy->CallApi(
                                                                           (ApiTypeEngine)api_type, parameter.c_str(), result);
                 } else {
                     LOG_F(INFO, "CallApi parameter did not initialize videoSource yet");
@@ -165,7 +98,7 @@ napi_value NodeIrisRtcEngine::CallApi(napi_env env, napi_callback_info info) {
             LOG_F(INFO, "CallApi parameter: type: %d, parameter: %s, ret: %d",
                   process_type, parameter.c_str(), ret);
         } catch (std::exception& e) {
-            nodeIrisRtcEngine->OnApiError(e.what());
+            this->OnApiError(e.what());
             LOG_F(INFO, "CallApi parameter: catch excepton msg: %s", e.what());
         }
     } else {
@@ -174,36 +107,24 @@ napi_value NodeIrisRtcEngine::CallApi(napi_env env, napi_callback_info info) {
     RETURE_NAPI_OBJ();
 }
 
-napi_value NodeIrisRtcEngine::CallApiWithBuffer(napi_env env,
-                                                napi_callback_info info) {
-    napi_status status;
-    size_t argc = 5;
-    napi_value args[5];
-    napi_value jsthis;
-    status = napi_get_cb_info(env, info, &argc, args, &jsthis, nullptr);
-    assert(status == napi_ok);
-    
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    
+Napi::Value NodeIrisRtcEngine::CallApiWithBuffer(const Napi::CallbackInfo& info) {
     std::string parameter = "";
     std::string buffer = "";
     int process_type = 0;
     int api_type = 0;
     int length = 0;
     
-    status = napi_get_value_int32(env, args[0], &process_type);
-    status = napi_get_value_int32(env, args[1], &api_type);
-    status = napi_get_value_utf8string(env, args[2], parameter);
-    status = napi_get_value_utf8string(env, args[3], buffer);
-    status = napi_get_value_int32(env, args[4], &length);
+    napi_get_value_int32(info[0], process_type);
+    napi_get_value_int32(info[1], api_type);
+    napi_get_value_utf8_string(info[2], parameter);
+    napi_get_value_utf8_string(info[3], buffer);
+    napi_get_value_int32(info[4], length);
     
     char result[512];
     int ret = ERROR_PARAMETER_1;
     memset(result, '\0', 512);
     
-    if (nodeIrisRtcEngine->_iris_engine) {
+    if (this->_iris_engine) {
         try {
             switch (ApiTypeEngine(api_type)) {
                 case kEngineRegisterPacketObserver: {
@@ -211,12 +132,12 @@ napi_value NodeIrisRtcEngine::CallApiWithBuffer(napi_env env,
                 }
                 case kEngineSendStreamMessage: {
                     if (process_type == PROCESS_TYPE::MAIN) {
-                        ret = nodeIrisRtcEngine->_iris_engine->CallApi(
+                        ret = this->_iris_engine->CallApi(
                                                                        (ApiTypeEngine)api_type, parameter.c_str(),
                                                                        const_cast<char*>(buffer.c_str()), result);
                     } else {
-                        if (nodeIrisRtcEngine->_video_source_proxy) {
-                            ret = nodeIrisRtcEngine->_video_source_proxy->CallApi(
+                        if (this->_video_source_proxy) {
+                            ret = this->_video_source_proxy->CallApi(
                                                                                   (ApiTypeEngine)api_type, parameter.c_str(), buffer.c_str(),
                                                                                   length, result);
                         } else {
@@ -245,64 +166,40 @@ napi_value NodeIrisRtcEngine::CallApiWithBuffer(napi_env env,
                 }
             }
         } catch (std::exception& e) {
-            nodeIrisRtcEngine->OnApiError(e.what());
+            this->OnApiError(e.what());
         }
     } else {
         ret = ERROR_NOT_INIT;
     }
-    
+
     RETURE_NAPI_OBJ();
 }
 
-napi_value NodeIrisRtcEngine::OnEvent(napi_env env, napi_callback_info info) {
-    napi_status status;
-    size_t argc = 2;
-    napi_value args[2];
-    napi_value jsthis;
-    status = napi_get_cb_info(env, info, &argc, args, &jsthis, nullptr);
-    
-    assert(status == napi_ok);
-    
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    assert(status == napi_ok);
+//TODO
+Napi::Value NodeIrisRtcEngine::OnEvent(const Napi::CallbackInfo& info) {
+    auto env = info.Env();
     std::string parameter = "";
-    status = napi_get_value_utf8string(env, args[0], parameter);
-    assert(status == napi_ok);
+    status = napi_get_value_utf8_string(info[0], parameter);
+   
     napi_value cb = args[1];
-    
-    napi_value global;
-    status = napi_get_global(env, &global);
-    assert(status == napi_ok);
-    if (nodeIrisRtcEngine->_iris_engine) {
-        nodeIrisRtcEngine->_iris_event_handler->addEvent(parameter, env, cb,
+
+    if (this->_iris_engine) {
+        this->_iris_event_handler->addEvent(parameter, env, cb,
                                                          global);
     } else {
         LOG_F(INFO, "NodeIrisRtcEngine::OnEvent error Not Init Engine");
     }
-    napi_value retValue;
+    auto ret_value = env.Null();
     return retValue;
 }
 
-napi_value NodeIrisRtcEngine::CreateChannel(napi_env env,
-                                            napi_callback_info info) {
+Napi::Value NodeIrisRtcEngine::CreateChannel(const Napi::CallbackInfo& info) {
     LOG_F(INFO, " NodeIrisRtcEngine::CreateChannel");
-    napi_status status;
-    size_t argc = 2;
-    napi_value args[2];
-    napi_value jsthis;
-    status = napi_get_cb_info(env, info, &argc, args, &jsthis, nullptr);
-    
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    
     int process_type = 0;
-    status = napi_get_value_int32(env, args[0], &process_type);
-    
     std::string channel_id = "";
-    status = napi_get_value_utf8string(env, args[1], channel_id);
+
+    status = napi_get_value_int32(info[0], process_type);
+    status = napi_get_value_utf8_string(info[1], channel_id);
     
     //  if (nodeIrisRtcEngine->_iris_engine) {
     //    auto iris_channel = nodeIrisRtcEngine->_iris_engine->channel();
@@ -317,132 +214,108 @@ napi_value NodeIrisRtcEngine::CreateChannel(napi_env env,
     //  }
 }
 
-napi_value NodeIrisRtcEngine::GetDeviceManager(napi_env env,
-                                               napi_callback_info info) {
-    NodeIrisRtcDeviceManager::Init(env);
-    napi_status status;
-    napi_value jsthis;
-    status = napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr);
-    assert(status == napi_ok);
+Napi::Value NodeIrisRtcEngine::GetDeviceManager(const Napi::CallbackInfo& info) {
+    // NodeIrisRtcDeviceManager::Init(env);
+    // napi_status status;
+    // napi_value jsthis;
+    // status = napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr);
+    // assert(status == napi_ok);
     
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
+    // NodeIrisRtcEngine* nodeIrisRtcEngine;
+    // status =
+    // napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
     
     
-    if (!nodeIrisRtcEngine->_iris_engine) {
-        LOG_F(INFO, "NodeIrisRtcEngine::GetDeviceManager error Not Init Engine");
-        return ;
-    }
-    auto _device_manager = nodeIrisRtcEngine->_iris_engine->device_manager();
-    NodeIrisRtcDeviceManager::_staticDeviceManager = _device_manager;
-    napi_value _js_device_manager =
-    NodeIrisRtcDeviceManager::NewInstance(env);
-    return _js_device_manager;
+    // if (!nodeIrisRtcEngine->_iris_engine) {
+    //     LOG_F(INFO, "NodeIrisRtcEngine::GetDeviceManager error Not Init Engine");
+    //     napi_value value;
+    //     return value;
+    // }
+    // auto _device_manager = nodeIrisRtcEngine->_iris_engine->device_manager();
+    // NodeIrisRtcDeviceManager::_staticDeviceManager = _device_manager;
+    // napi_value _js_device_manager =
+    // NodeIrisRtcDeviceManager::NewInstance(env);
+    // return _js_device_manager;
 }
 
-napi_value NodeIrisRtcEngine::GetScreenWindowsInfo(napi_env env,
-                                                   napi_callback_info info) {
-    napi_status status;
-    napi_value jsthis;
-    status = napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr);
-    
-    napi_value array;
-    napi_create_array(env, &array);
-    
+Napi::Value NodeIrisRtcEngine::GetScreenWindowsInfo(const Napi::CallbackInfo& info) {
+    auto env = info.Env();
     auto _allWindows = getAllWindowInfo();
+    auto arr_obj = Napi::Array::New(env, _allWindows.size());
     for (auto i = 0; i < _allWindows.size(); i++) {
+        auto obj = Napi::Object::New(env);
         auto _windowInfo = _allWindows[i];
-        napi_value obj;
-        napi_create_object(env, &obj);
 #ifdef _WIN32
         UINT32 windowId = (UINT32)_windowInfo.windowId;
 #elif defined(__APPLE__)
         unsigned int windowId = _windowInfo.windowId;
 #endif
         
-        napi_obj_set_property(env, obj, "windowId", windowId);
-        napi_obj_set_property(env, obj, "name", _windowInfo.name);
-        napi_obj_set_property(env, obj, "ownerName", _windowInfo.ownerName);
-        napi_obj_set_property(env, obj, "isOnScreen", _windowInfo.isOnScreen);
-        napi_obj_set_property(env, obj, "width", _windowInfo.width);
-        napi_obj_set_property(env, obj, "height", _windowInfo.height);
-        napi_obj_set_property(env, obj, "originWidth", _windowInfo.originWidth);
-        napi_obj_set_property(env, obj, "originHeight", _windowInfo.originHeight);
-        
+        obj.Set("windowId", windowId);
+        obj.Set("name", _windowInfo.name);
+        obj.Set("ownerName", _windowInfo.ownerName);
+        obj.Set("isOnScreen", _windowInfo.isOnScreen);
+        obj.Set("width", _windowInfo.width);
+        obj.Set("height", _windowInfo.height);
+        obj.Set("originWidth", _windowInfo.originWidth);
+        obj.Set("originHeight", _windowInfo.originHeight);
+
         if (_windowInfo.imageData) {
-            napi_obj_set_property(env, obj, "image", _windowInfo.imageData,
-                                  _windowInfo.imageDataLength);
+            auto arr_obj = Napi::ArrayBuffer::New(env, _windowInfo.imageData, _windowInfo.imageDataLength);
+            obj.Set("image", arr_obj);
             free(_windowInfo.imageData);
         }
-        napi_set_element(env, array, i, obj);
+        arr_obj[i] = obj;
     }
-    return array;
+    return arr_obj;
 }
 
-napi_value NodeIrisRtcEngine::GetScreenDisplaysInfo(napi_env env,
-                                                    napi_callback_info info) {
-    napi_status status;
-    napi_value jsthis;
-    status = napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr);
-    
-    napi_value array;
-    napi_create_array(env, &array);
-    
+Napi::Value NodeIrisRtcEngine::GetScreenDisplaysInfo(const Napi::CallbackInfo& info) {
+    auto env = info.Env();
     auto _allDisplays = getAllDisplayInfo();
-    
+    auto arr_obj = Napi::Array::New(env, _allDisplays.size());
     for (auto i = 0; i < _allDisplays.size(); i++) {
-        napi_value displayObj;
-        napi_create_object(env, &displayObj);
+        auto displayObj = Napi::Object::New(env);
         auto _displayInfo = _allDisplays[i];
         auto _displayId = _displayInfo.displayId;
-        napi_value obj;
+        auto obj = Napi::Object::New(env);
 #ifdef _WIN32
-        napi_obj_set_property(env, obj, "x", _displayId.x);
-        napi_obj_set_property(env, obj, "x", _displayId.y);
-        napi_obj_set_property(env, obj, "x", _displayId.width);
-        napi_obj_set_property(env, obj, "x", _displayId.height);
+        obj.Set("x", _displayId.x);
+        obj.Set("y", _displayId.y);
+        obj.Set("width", _displayId.width);
+        obj.Set("height", _displayId.height);
 #elif defined(__APPLE__)
-        napi_obj_set_property(env, obj, "id", _displayId.idVal);
+        obj.Set("id", _displayId.idVal);
 #endif
-        napi_obj_set_property(env, displayObj, "displayId", obj);
-        napi_obj_set_property(env, displayObj, "width", _displayInfo.width);
-        napi_obj_set_property(env, displayObj, "height", _displayInfo.height);
-        napi_obj_set_property(env, displayObj, "isMain", _displayInfo.isMain);
-        napi_obj_set_property(env, displayObj, "isActive", _displayInfo.isActive);
-        napi_obj_set_property(env, displayObj, "isBuiltin", _displayInfo.isBuiltin);
+        displayObj.Set("displayId", obj);
+        displayObj.Set("width", _displayInfo.width);
+        displayObj.Set("height", _displayInfo.height);
+        displayObj.Set("isMain", _displayInfo.isMain);
+        displayObj.Set("isActive", _displayInfo.isActive);
+        displayObj.Set("isBuiltin", _displayInfo.isBuiltin);
         if (_displayInfo.imageData) {
-            napi_obj_set_property(env, displayObj, "image", _displayInfo.imageData,
-                                  _displayInfo.imageDataLength);
+            auto arr_obj = Napi::ArrayBuffer::New(env, _displayInfo.imageData, _displayInfo.imageDataLength);
+            displayObj.Set("image", arr_obj);
             free(_displayInfo.imageData);
         }
-        napi_set_element(env, array, i, displayObj);
+        arr_obj[i] = displayObj;
     }
-    return array;
+    return arr_obj;
 }
 
-napi_value NodeIrisRtcEngine::VideoSourceInitialize(napi_env env,
-                                                    napi_callback_info info) {
-    napi_status status;
-    napi_value jsthis;
-    status = napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr);
-    
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    
+Napi::Value NodeIrisRtcEngine::VideoSourceInitialize(const Napi::CallbackInfo& info) {
     char result[512];
     int ret = ERROR_PARAMETER_1;
     memset(result, '\0', 512);
     
-    if (!nodeIrisRtcEngine->_video_source_proxy) {
-        nodeIrisRtcEngine->_video_source_proxy.reset(
-                                                     new VideoSourceProxy(nodeIrisRtcEngine->_video_processer));
+    if (!this->_video_source_proxy) {
+        this->_video_source_proxy.reset(
+                                                     new VideoSourceProxy(this->_video_processer));
     }
     
-    if (nodeIrisRtcEngine->_video_source_proxy) {
-        if (nodeIrisRtcEngine->_video_source_proxy->Initialize(
-                                                               nodeIrisRtcEngine->_iris_event_handler))
+    if (this->_video_source_proxy) {
+        if (this->_video_source_proxy->Initialize(
+                                                               this->_iris_event_handler))
             ret = ERROR_OK;
     } else {
         ret = ERROR_NOT_INIT;
@@ -452,26 +325,15 @@ napi_value NodeIrisRtcEngine::VideoSourceInitialize(napi_env env,
     RETURE_NAPI_OBJ();
 }
 
-napi_value NodeIrisRtcEngine::VideoSourceSetAddonLogFile(
-                                                         napi_env env,
-                                                         napi_callback_info info) {
-    napi_status status;
-    napi_value jsthis;
-    size_t argc = 1;
-    napi_value args[1];
-    status = napi_get_cb_info(env, info, &argc, args, &jsthis, nullptr);
-    
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    
+Napi::Value NodeIrisRtcEngine::VideoSourceSetAddonLogFile(const Napi::CallbackInfo& info) {
     std::string parameter = "";
-    status = napi_get_value_utf8string(env, args[0], parameter);
+    status = napi_get_value_utf8_string(info[0], parameter);
+
     char result[512];
     int ret = ERROR_PARAMETER_1;
     memset(result, '\0', 512);
-    if (nodeIrisRtcEngine->_video_source_proxy) {
-        if (nodeIrisRtcEngine->_video_source_proxy->SetAddonLogFile(
+    if (this->_video_source_proxy) {
+        if (this->_video_source_proxy->SetAddonLogFile(
                                                                     parameter.c_str()))
             ret = ERROR_OK;
     } else {
@@ -483,21 +345,12 @@ napi_value NodeIrisRtcEngine::VideoSourceSetAddonLogFile(
     RETURE_NAPI_OBJ();
 }
 
-napi_value NodeIrisRtcEngine::VideoSourceRelease(napi_env env,
-                                                 napi_callback_info info) {
-    napi_status status;
-    napi_value jsthis;
-    status = napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr);
-    
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    
+Napi::Value NodeIrisRtcEngine::VideoSourceRelease(const Napi::CallbackInfo& info) {
     char result[512];
     int ret = ERROR_PARAMETER_1;
     memset(result, '\0', 512);
-    if (nodeIrisRtcEngine->_video_source_proxy) {
-        ret = nodeIrisRtcEngine->VideoSourceRelease();
+    if (this->_video_source_proxy) {
+        ret = this->VideoSourceRelease();
     } else {
         ret = ERROR_NOT_INIT;
         LOG_F(INFO, "VideoSourceInitialize NodeIris Engine Not Init");
@@ -514,22 +367,11 @@ int NodeIrisRtcEngine::VideoSourceRelease() {
     return ERROR_OK;
 }
 
-napi_value NodeIrisRtcEngine::SetAddonLogFile(napi_env env,
-                                              napi_callback_info info) {
-    napi_status status;
-    napi_value jsthis;
-    size_t argc = 2;
-    napi_value args[2];
-    status = napi_get_cb_info(env, info, &argc, args, &jsthis, nullptr);
-    
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    
+Napi::Value NodeIrisRtcEngine::SetAddonLogFile(const Napi::CallbackInfo& info) {
     int process_type = 0;
     std::string file_path = "";
-    status = napi_get_value_int32(env, args[0], &process_type);
-    status = napi_get_value_utf8string(env, args[1], file_path);
+    status = napi_get_value_int32(info[0], process_type);
+    status = napi_get_value_utf8_string(info[1], file_path);
     
     char result[512];
     int ret = ERROR_PARAMETER_1;
@@ -546,37 +388,26 @@ void NodeIrisRtcEngine::OnApiError(const char* errorMessage) {
     _iris_event_handler->OnEvent("onApiError", errorMessage);
 }
 
-napi_value NodeIrisRtcEngine::PluginCallApi(napi_env env,
-                                            napi_callback_info info) {
-    napi_status status;
-    napi_value jsthis;
-    size_t argc = 3;
-    napi_value args[3];
-    status = napi_get_cb_info(env, info, &argc, args, &jsthis, nullptr);
-    
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    
+Napi::Value NodeIrisRtcEngine::PluginCallApi(const Napi::CallbackInfo& info) {
     int process_type = 0;
     int api_type = 0;
     std::string parameter = "";
-    status = napi_get_value_int32(env, args[0], &process_type);
-    status = napi_get_value_int32(env, args[1], &api_type);
-    status = napi_get_value_utf8string(env, args[2], parameter);
+    status = napi_get_value_int32(info[0], process_type);
+    status = napi_get_value_int32(info[1], api_type);
+    status = napi_get_value_utf8_string(info[2], parameter);
     char result[512];
     memset(result, '\0', 512);
     LOG_F(INFO, "CallApi parameter: %s", parameter.c_str());
     int ret = ERROR_PARAMETER_1;
     
-    if (nodeIrisRtcEngine->_iris_engine) {
+    if (this->_iris_engine) {
         try {
             if (process_type == PROCESS_TYPE::MAIN) {
-                ret = nodeIrisRtcEngine->_iris_raw_data_plugin_manager->CallApi(
+                ret = this->_iris_raw_data_plugin_manager->CallApi(
                                                                                 (ApiTypeRawDataPluginManager)api_type, parameter.c_str(), result);
             } else {
-                if (nodeIrisRtcEngine->_video_source_proxy) {
-                    ret = nodeIrisRtcEngine->_video_source_proxy->PluginCallApi(
+                if (this->_video_source_proxy) {
+                    ret = this->_video_source_proxy->PluginCallApi(
                                                                                 (ApiTypeRawDataPluginManager)api_type, parameter.c_str(), result);
                 } else {
                     LOG_F(INFO,
@@ -586,7 +417,7 @@ napi_value NodeIrisRtcEngine::PluginCallApi(napi_env env,
             }
         } catch (std::exception& e) {
             LOG_F(INFO, "PluginCallApi catch exception %s", e.what());
-            nodeIrisRtcEngine->OnApiError(e.what());
+            this->OnApiError(e.what());
         }
     } else {
         ret = ERROR_NOT_INIT;
@@ -595,52 +426,42 @@ napi_value NodeIrisRtcEngine::PluginCallApi(napi_env env,
     RETURE_NAPI_OBJ();
 }
 
-napi_value NodeIrisRtcEngine::EnableVideoFrameCache(napi_env env,
-                                                    napi_callback_info info) {
-    napi_status status;
-    napi_value jsthis;
-    size_t argc = 2;
-    napi_value args[2];
-    status = napi_get_cb_info(env, info, &argc, args, &jsthis, nullptr);
-    
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    
+Napi::Value NodeIrisRtcEngine::EnableVideoFrameCache(const Napi::CallbackInfo& info) {
     int process_type = 0;
-    napi_get_value_int32(env, args[0], &process_type);
-    napi_value obj = args[1];
+    Napi::Object obj;
+    napi_get_value_int32(info[0], process_type);
+    napi_get_value_obj(info[1], obj);
     
     unsigned int uid = 0;
     std::string channelId = "";
     int width = 0;
     int height = 0;
     
-    napi_obj_get_property(env, obj, "uid", uid);
-    napi_obj_get_property(env, obj, "channelId", channelId);
-    napi_obj_get_property(env, obj, "width", width);
-    napi_obj_get_property(env, obj, "height", height);
+    napi_get_obj_uint32(obj, "uid", uid);
+    napi_get_obj_utf8_string(obj, "channelId", channelId);
+    napi_get_obj_int32(obj, "width", width);
+    napi_get_obj_int32(obj, "height", height);
     
     char result[512];
     memset(result, '\0', 512);
     int ret = ERROR_PARAMETER_1;
     
-    if (nodeIrisRtcEngine->_iris_engine) {
+    if (this->_iris_engine) {
         IrisRtcRendererCacheConfig config(VideoFrameType::kVideoFrameTypeYUV420,
                                           nullptr, width, height);
         try {
             if (process_type == PROCESS_TYPE::MAIN) {
-                ret = nodeIrisRtcEngine->_video_processer->EnableVideoFrameCache(
+                ret = this->_video_processer->EnableVideoFrameCache(
                                                                                  config, uid, channelId.c_str());
             } else {
-                if (nodeIrisRtcEngine->_video_source_proxy) {
-                    ret = nodeIrisRtcEngine->_video_source_proxy->EnableVideoFrameCache(
+                if (this->_video_source_proxy) {
+                    ret = this->_video_source_proxy->EnableVideoFrameCache(
                                                                                         channelId.c_str(), uid, width, height);
                 }
             }
         } catch (std::exception& e) {
             LOG_F(INFO, "PluginCallApi catch exception %s", e.what());
-            nodeIrisRtcEngine->OnApiError(e.what());
+            this->OnApiError(e.what());
         }
     } else {
         ret = ERROR_NOT_INIT;
@@ -650,45 +471,36 @@ napi_value NodeIrisRtcEngine::EnableVideoFrameCache(napi_env env,
     RETURE_NAPI_OBJ();
 }
 
-napi_value NodeIrisRtcEngine::DisableVideoFrameCache(napi_env env,
-                                                     napi_callback_info info) {
-    napi_status status;
-    napi_value jsthis;
-    size_t argc = 2;
-    napi_value args[2];
-    status = napi_get_cb_info(env, info, &argc, args, &jsthis, nullptr);
-    
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    
+Napi::Value NodeIrisRtcEngine::DisableVideoFrameCache(const Napi::CallbackInfo& info) {
     int process_type = 0;
-    napi_get_value_int32(env, args[0], &process_type);
-    napi_value obj = args[1];
-    
+    Napi::Object obj;
+
+    napi_get_value_int32(info[0], process_type);
+    napi_get_value_obj(info[1], obj);
+
     unsigned int uid = 0;
     std::string channelId = "";
     
-    napi_obj_get_property(env, obj, "uid", uid);
-    napi_obj_get_property(env, obj, "channelId", channelId);
+    napi_get_obj_uint32(obj, "uid", uid);
+    napi_get_obj_utf8_string(obj, "channelId", channelId);
     
     char result[512];
     memset(result, '\0', 512);
     int ret = ERROR_PARAMETER_1;
     
-    if (nodeIrisRtcEngine->_iris_engine) {
+    if (this->_iris_engine) {
         try {
             if (process_type == PROCESS_TYPE::MAIN) {
-                ret = nodeIrisRtcEngine->_video_processer->DisableVideoFrameCache(
+                ret = this->_video_processer->DisableVideoFrameCache(
                                                                                   channelId.c_str(), uid);
             } else {
-                if (nodeIrisRtcEngine->_video_source_proxy) {
-                    ret = nodeIrisRtcEngine->_video_source_proxy->DisableVideoFrameCache(
+                if (this->_video_source_proxy) {
+                    ret = this->_video_source_proxy->DisableVideoFrameCache(
                                                                                          channelId.c_str(), uid);
                 }
             }
         } catch (std::exception& e) {
-            nodeIrisRtcEngine->OnApiError(e.what());
+            this->OnApiError(e.what());
         }
     } else {
         ret = ERROR_NOT_INIT;
@@ -698,50 +510,44 @@ napi_value NodeIrisRtcEngine::DisableVideoFrameCache(napi_env env,
     RETURE_NAPI_OBJ();
 }
 
-napi_value NodeIrisRtcEngine::GetVideoStreamData(napi_env env,
-                                                 napi_callback_info info) {
-    napi_status status;
-    napi_value jsthis;
-    size_t argc = 2;
-    napi_value args[2];
-    status = napi_get_cb_info(env, info, &argc, args, &jsthis, nullptr);
+Napi::Value NodeIrisRtcEngine::GetVideoStreamData(const Napi::CallbackInfo& info) {
     
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    
+    auto env = info.Env();  
     int process_type = 0;
-    napi_get_value_int32(env, args[0], &process_type);
-    
-    napi_value obj = args[1];
+    Napi::Object obj;
+
+    napi_get_value_int32(info[0], process_type);
+    napi_get_value_obj(info[1], obj);
+
     unsigned int uid;
     std::string channel_id;
-    napi_value y_buffer_obj;
+    Napi::Object y_buffer_obj;
     void* y_buffer;
-    size_t y_length;
-    napi_value u_buffer_obj;
+    int y_length;
+    Napi::Object u_buffer_obj;
     void* u_buffer;
-    size_t u_length;
-    napi_value v_buffer_obj;
+    int u_length;
+    Napi::Object v_buffer_obj;
     void* v_buffer;
-    size_t v_length;
+    int v_length;
+
     int height;
     int y_stride;
     
-    napi_obj_get_property(env, obj, "uid", uid);
-    napi_obj_get_property(env, obj, "channelId", channel_id);
+    napi_get_obj_uint32(obj, "uid", uid);
+    napi_get_obj_utf8_string(obj, "channelId", channel_id);
     
-    napi_obj_get_property(env, obj, "yBuffer", y_buffer_obj);
-    napi_get_buffer_info(env, y_buffer_obj, &y_buffer, &y_length);
+    napi_get_obj_obj(obj, "yBuffer", y_buffer_obj);
+    napi_get_obj_node_buffer(y_buffer_obj, y_buffer, y_length);
     
-    napi_obj_get_property(env, obj, "uBuffer", u_buffer_obj);
-    napi_get_buffer_info(env, u_buffer_obj, &u_buffer, &u_length);
+    napi_get_obj_obj(obj, "uBuffer", u_buffer_obj);
+    napi_get_obj_node_buffer(u_buffer_obj, u_buffer, u_length);
     
-    napi_obj_get_property(env, obj, "vBuffer", v_buffer_obj);
-    napi_get_buffer_info(env, v_buffer_obj, &v_buffer, &v_length);
+    napi_get_obj_obj(obj, "vBuffer", v_buffer_obj);
+    napi_get_obj_node_buffer(v_buffer_obj, v_buffer, v_length);
     
-    napi_obj_get_property(env, obj, "height", height);
-    napi_obj_get_property(env, obj, "yStride", y_stride);
+    napi_get_obj_uint32(env, obj, "height", height);
+    napi_get_obj_uint32(env, obj, "yStride", y_stride);
     
     IrisRtcVideoFrame _videoFrame = IrisRtcVideoFrame_default;
     _videoFrame.y_buffer = y_buffer;
@@ -753,47 +559,36 @@ napi_value NodeIrisRtcEngine::GetVideoStreamData(napi_env env,
     bool isFresh = false;
     bool ret = false;
     
-    if (nodeIrisRtcEngine->_iris_engine) {
+    if (this->_iris_engine) {
         try {
             if (process_type == PROCESS_TYPE::MAIN) {
-                ret = nodeIrisRtcEngine->_video_processer->GetVideoFrame(
+                ret = this->_video_processer->GetVideoFrame(
                                                                          _videoFrame, isFresh, uid, channel_id.c_str());
             } else {
-                ret = nodeIrisRtcEngine->_video_processer->VideoSourceGetVideoFrame(
+                ret = this->_video_processer->VideoSourceGetVideoFrame(
                                                                                     _videoFrame, isFresh, uid, channel_id.c_str());
             }
         } catch (std::exception& e) {
-            nodeIrisRtcEngine->OnApiError(e.what());
+            this->OnApiError(e.what());
         }
     } else {
         ret = false;
         LOG_F(INFO, "VideoSourceInitialize NodeIris Engine Not Init");
     }
     unsigned int rotation = 0;
-    napi_value retObj;
-    status = napi_create_object(env, &retObj);
-    napi_obj_set_property(env, retObj, "ret", ret);
-    napi_obj_set_property(env, retObj, "isNewFrame", isFresh);
-    napi_obj_set_property(env, retObj, "width", _videoFrame.width);
-    napi_obj_set_property(env, retObj, "height", _videoFrame.height);
-    napi_obj_set_property(env, retObj, "yStride", _videoFrame.y_stride);
-    napi_obj_set_property(env, retObj, "rotation", rotation);
-    napi_obj_set_property(env, retObj, "timestamp",
-                          _videoFrame.render_time_ms);
+    auto ret_obj = Napi::Object::New(env);
+    ret_obj.Set("ret", ret);
+    ret_obj.Set("isNewFrame", isFresh);
+    ret_obj.Set("width", _videoFrame.width);
+    ret_obj.Set("height", _videoFrame.height);
+    ret_obj.Set("yStride", _videoFrame.y_stride);
+    ret_obj.Set("rotation", rotation);
+    ret_obj.Set("timestamp", _videoFrame.render_time_ms);
     return retObj;
 }
 
-napi_value NodeIrisRtcEngine::Release(napi_env env, napi_callback_info info) {
-    napi_status status;
-    napi_value jsthis;
-    size_t argc = 2;
-    napi_value args[2];
-    status = napi_get_cb_info(env, info, &argc, args, &jsthis, nullptr);
-    
-    NodeIrisRtcEngine* nodeIrisRtcEngine;
-    status =
-    napi_unwrap(env, jsthis, reinterpret_cast<void**>(&nodeIrisRtcEngine));
-    
+Napi::Value NodeIrisRtcEngine::Release(const Napi::CallbackInfo& info) {
+    auto env = info.Env();
     if (nodeIrisRtcEngine->_iris_engine) {
         nodeIrisRtcEngine->_video_processer.reset();
         nodeIrisRtcEngine->_iris_event_handler.reset();
@@ -805,6 +600,8 @@ napi_value NodeIrisRtcEngine::Release(napi_env env, napi_callback_info info) {
     } else {
         LOG_F(INFO, "VideoSourceInitialize NodeIris Engine Not Init");
     }
+    auto ret_value = env.Null();
+    return ret_value;
 }
 }  // namespace electron
 }  // namespace rtc

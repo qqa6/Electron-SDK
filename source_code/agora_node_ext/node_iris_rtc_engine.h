@@ -2,10 +2,9 @@
  * @Author: zhangtao@agora.io
  * @Date: 2021-04-22 20:53:44
  * @Last Modified by: zhangtao@agora.io
- * @Last Modified time: 2021-09-22 23:17:44
+ * @Last Modified time: 2021-10-09 19:18:19
  */
 #pragma once
-#include <node_api.h>
 #include <exception>
 #include "iris_rtc_engine.h"
 #include "iris_rtc_raw_data.h"
@@ -23,41 +22,30 @@ namespace electron {
 
 class NodeIrisEventHandler;
 
-class NodeIrisRtcEngine {
+class NodeIrisRtcEngine : public Napi::ObjectWrapper<NodeIrisRtcEngine>{
  public:
-  explicit NodeIrisRtcEngine();
+  explicit NodeIrisRtcEngine(const Napi::CallbackInfo& info);
   virtual ~NodeIrisRtcEngine();
 
-  static napi_value Init(napi_env env, napi_value exports);
-  static napi_value Constructor(napi_env env);
-  static napi_value New(napi_env env, napi_callback_info info);
-  static void Destructor(napi_env env, void* nativeObject, void* finalize_hint);
-  static napi_value CallApi(napi_env env, napi_callback_info info);
-  static napi_value CallApiWithBuffer(napi_env env, napi_callback_info info);
-  static napi_value OnEvent(napi_env env, napi_callback_info info);
-  static napi_value CreateChannel(napi_env env, napi_callback_info info);
-  static napi_value GetDeviceManager(napi_env env, napi_callback_info info);
-  static napi_value GetScreenWindowsInfo(napi_env env, napi_callback_info info);
-  static napi_value GetScreenDisplaysInfo(napi_env env,
-                                          napi_callback_info info);
-  static napi_value PluginCallApi(napi_env env, napi_callback_info info);
-  static napi_value EnableVideoFrameCache(napi_env env,
-                                          napi_callback_info info);
-  static napi_value DisableVideoFrameCache(napi_env env,
-                                           napi_callback_info info);
-  static napi_value GetVideoStreamData(napi_env env, napi_callback_info info);
-  static napi_value VideoSourceInitialize(napi_env env,
-                                          napi_callback_info info);
-  static napi_value VideoSourceRelease(napi_env env, napi_callback_info info);
-  static napi_value VideoSourceSetAddonLogFile(napi_env env,
-                                               napi_callback_info info);
-  static napi_value SetAddonLogFile(napi_env env, napi_callback_info info);
-  static napi_value Release(napi_env env, napi_callback_info info);
+  static Napi::Object Init(Napi::Env env, Napi::Object exports);
+  Napi::Value CallApi(const Napi::CallbackInfo& info);
+  Napi::Value CallApiWithBuffer(const Napi::CallbackInfo& info);
+  Napi::Value OnEvent(const Napi::CallbackInfo& info);
+  Napi::Value CreateChannel(const Napi::CallbackInfo& info);
+  Napi::Value GetDeviceManager(const Napi::CallbackInfo& info);
+  Napi::Value GetScreenWindowsInfo(const Napi::CallbackInfo& info);
+  Napi::Value GetScreenDisplaysInfo(const Napi::CallbackInfo& info);
+  Napi::Value PluginCallApi(const Napi::CallbackInfo& info);
+  Napi::Value EnableVideoFrameCache(const Napi::CallbackInfo& info);
+  Napi::Value DisableVideoFrameCache(const Napi::CallbackInfo& info);
+  Napi::Value GetVideoStreamData(const Napi::CallbackInfo& info);
+  Napi::Value VideoSourceInitialize(const Napi::CallbackInfo& info);
+  Napi::Value VideoSourceRelease(const Napi::CallbackInfo& info);
+  Napi::Value VideoSourceSetAddonLogFile(const Napi::CallbackInfo& info);
+  Napi::Value SetAddonLogFile(const Napi::CallbackInfo& info);
+  Napi::Value Release(const Napi::CallbackInfo& info);
   void OnApiError(const char* errorMessage);
   int VideoSourceRelease();
-
-  napi_env _env;
-  napi_ref _ref;
 
   static const char* _class_name;
 

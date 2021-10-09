@@ -1,5 +1,5 @@
 #pragma once
-#include <node_api.h>
+#include <napi.h>
 #include "logger.h"
 
 namespace agora {

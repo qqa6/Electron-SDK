@@ -40,7 +40,8 @@
     "winston": "^3.3.3",
     "yuv-buffer": "1.0.0",
     "yuv-canvas": "1.2.6",
-    "bindings": "1.2.1"
+    "bindings": "1.2.1",
+    "node-addon-api": "^1.0.0"
   },
   "files": [
     "js",

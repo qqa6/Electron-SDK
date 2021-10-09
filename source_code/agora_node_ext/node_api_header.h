@@ -2,7 +2,7 @@
  * @Author: zhangtao@agora.io
  * @Date: 2021-04-22 20:53:01
  * @Last Modified by: zhangtao@agora.io
- * @Last Modified time: 2021-09-23 00:02:05
+ * @Last Modified time: 2021-10-09 19:31:31
  */
 #pragma once
 #include <node_buffer.h>
@@ -14,94 +14,33 @@
 namespace agora {
 namespace rtc {
 namespace electron {
-#define DECLARE_NAPI_METHOD(name, func) \
-  { name, 0, func, 0, 0, 0, napi_default, 0 }
+void napi_get_value_float(const Napi::Value& value, float& result);
 
-#define RETURE_NAPI_OBJ()                                         \
-  napi_value retObj;                                              \
-  status = napi_create_object(env, &retObj);                      \
-  std::string resultStr = std::string(result);                    \
-  napi_obj_set_property(env, retObj, _ret_code_str, ret);         \
-  napi_obj_set_property(env, retObj, _ret_result_str, resultStr); \
-  return retObj
+void napi_get_value_double(const Napi::Value& value, double& result);
 
-napi_status napi_get_value_utf8string(napi_env& env,
-                                      napi_value& value,
-                                      std::string& str);
+void napi_get_value_int32(const Napi::Value& value, int& result);
 
-napi_status napi_obj_set_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  int& value,
-                                  int length = 0);
+void napi_get_value_uint32(const Napi::Value& value, unsigned int& result);
 
-napi_status napi_obj_set_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  std::string& value,
-                                  int length = 0);
+void napi_get_value_utf8_string(const Napi::Value& value, std::string& result);
 
-napi_status napi_obj_set_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  uint32_t& value,
-                                  int length = 0);
+void napi_get_value_bool(const Napi::Value& value, bool& result);
 
-napi_status napi_obj_set_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  float& value,
-                                  int length = 0);
+void napi_get_value_obj(const Napi::Value& value, Napi::Object& result);
 
-napi_status napi_obj_set_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  bool& value,
-                                  int length = 0);
+void napi_get_value_node_buffer(const Napi::Value& value, void*& data, int& length);
 
-napi_status napi_obj_set_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  double& value,
-                                  int length = 0);
+void napi_get_value_function(const Napi::Value& value, Napi::FunctionReference& result);
 
-napi_status napi_obj_set_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  int64_t& value,
-                                  int length = 0);
+void napi_get_obj_int32(const Napi::Object& obj, const char *key, int& result);
 
-napi_status napi_obj_set_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  unsigned char* value,
-                                  int length = 0);
+void napi_get_obj_utf8_string(const Napi::Object& obj, const char *key, std::string& result);
 
-napi_status napi_obj_set_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  napi_value& value,
-                                  int length = 0);
+void napi_get_obj_uint32(const Napi::Object& obj, const char *key, unsigned int& result);
 
-napi_status napi_obj_get_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  int& result);
+void napi_get_obj_obj(const Napi::Object& obj, const char *key, Napi::Object& result);
 
-napi_status napi_obj_get_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  uint32_t& result);
-
-napi_status napi_obj_get_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  std::string& result);
-
-napi_status napi_obj_get_property(napi_env& env,
-                                  napi_value& object,
-                                  const char* utf8name,
-                                  napi_value& result);
+void napi_get_obj_node_buffer(const Napi::Object& obj, const char *key, void*& data, int& length);
 }  // namespace electron
 }  // namespace rtc
 }  // namespace agora
