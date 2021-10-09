@@ -2,7 +2,7 @@
  * @Author: zhangtao@agora.io
  * @Date: 2021-04-22 20:53:53
  * @Last Modified by: zhangtao@agora.io
- * @Last Modified time: 2021-05-19 20:07:39
+ * @Last Modified time: 2021-10-09 20:24:08
  */
 #pragma once
 #include <unordered_map>
@@ -20,9 +20,7 @@ class NodeIrisEventHandler : public iris::IrisEventHandler,
                              public IVideoSourceEventHandler {
  public:
   typedef struct NodeEventCallback {
-    napi_env env;
-    napi_value call_back;
-    napi_value global;
+    Napi::FunctionReference function;
   } EventCallback;
 
  public:
@@ -47,9 +45,7 @@ class NodeIrisEventHandler : public iris::IrisEventHandler,
   virtual void OnVideoSourceExit() override;
 
   void addEvent(const std::string& eventName,
-                napi_env& env,
-                napi_value& call_bcak,
-                napi_value& global);
+                Napi::FunctionReference function);
 
  private:
   std::unordered_map<std::string, EventCallback*> _callbacks;

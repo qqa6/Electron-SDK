@@ -2,7 +2,7 @@
  * @Author: zhangtao@agora.io
  * @Date: 2021-04-22 20:53:49
  * @Last Modified by: zhangtao@agora.io
- * @Last Modified time: 2021-05-18 15:07:20
+ * @Last Modified time: 2021-10-09 20:30:27
  */
 #include "node_iris_event_handler.h"
 #include <memory.h>
@@ -24,13 +24,9 @@ NodeIrisEventHandler::~NodeIrisEventHandler() {
 }
 
 void NodeIrisEventHandler::addEvent(const std::string& eventName,
-                                    napi_env& env,
-                                    napi_value& call_bcak,
-                                    napi_value& global) {
+                                    Napi::FunctionReference function) {
   auto callback = new EventCallback();
-  callback->env = env;
-  callback->call_back = call_bcak;
-  callback->global = global;
+  callback->function = function;
   _callbacks[eventName] = callback;
 }
 
@@ -40,15 +36,12 @@ void NodeIrisEventHandler::OnEvent(const char* event, const char* data) {
   node_async_call::async_call([this, _eventName, _eventData] {
     auto it = _callbacks.find("call_back");
     if (it != _callbacks.end()) {
-      size_t argc = 2;
-      napi_value args[2];
-      napi_value result;
-      napi_create_string_utf8(it->second->env, _eventName.c_str(),
-                              sizeof(_eventName), &args[0]);
-      napi_create_string_utf8(it->second->env, _eventData.c_str(),
-                              sizeof(_eventData), &args[1]);
-      napi_call_function(it->second->env, it->second->global,
-                         it->second->call_back, argc, args, &result);
+      auto function_reference = it->second;
+      auto env = function_reference.Env();
+      auto param1 = Napi::String::New(env, event);
+      auto param2 = Napi::String::New(env, data);
+      std::vector<Napi::Value> args = {param1, param2};
+      function_reference.Call(args);
     }
   });
 }
@@ -59,25 +52,20 @@ void NodeIrisEventHandler::OnEvent(const char* event,
                                    unsigned int length) {
   std::string _eventName(event);
   std::string _eventData(data);
-  std::vector<char> stringData;
-  stringData.resize(length + 1, '\0');
-
-  memcpy(stringData.data(), buffer, length);
-  std::string _eventBuffer(stringData.data());
-  node_async_call::async_call([this, _eventName, _eventData, _eventBuffer] {
+  std::vector<unsigned char> vec_buffer;
+  vec_buffer.resize(length);
+  memcpy(vec_buffer.data(), buffer, length);
+  
+  node_async_call::async_call([this, _eventName, _eventData, vec_buffer, length] {
     auto it = _callbacks.find("call_back_with_buffer");
     if (it != _callbacks.end()) {
-      size_t argc = 3;
-      napi_value args[3];
-      napi_value result;
-      napi_create_string_utf8(it->second->env, _eventName.c_str(),
-                              sizeof(_eventName), &args[0]);
-      napi_create_string_utf8(it->second->env, _eventData.c_str(),
-                              sizeof(_eventData), &args[1]);
-      napi_create_string_utf8(it->second->env, _eventBuffer.c_str(),
-                              sizeof(_eventBuffer), &args[2]);
-      napi_call_function(it->second->env, it->second->global,
-                         it->second->call_back, argc, args, &result);
+      auto function_reference = it->second;
+      auto env = function_reference.Env();
+      auto param1 = Napi::String::New(env, _eventName);
+      auto param2 = Napi::String::New(env, _eventData);
+      auto param3 = Napi::ArrayBuffer::New(env, vec_buffer.data(), length);
+      std::vector<Napi::Value> args = {param1, param2, param3};
+      function_reference.Call(args);
     }
   });
 }
@@ -89,15 +77,12 @@ void NodeIrisEventHandler::OnVideoSourceEvent(const char* eventName,
   node_async_call::async_call([this, _eventName, _eventData] {
     auto it = _callbacks.find("video_source_call_back");
     if (it != _callbacks.end()) {
-      size_t argc = 2;
-      napi_value args[2];
-      napi_value result;
-      napi_create_string_utf8(it->second->env, _eventName.c_str(),
-                              sizeof(_eventName), &args[0]);
-      napi_create_string_utf8(it->second->env, _eventData.c_str(),
-                              sizeof(_eventData), &args[1]);
-      napi_call_function(it->second->env, it->second->global,
-                         it->second->call_back, argc, args, &result);
+      auto function_reference = it->second;
+      auto env = function_reference.Env();
+      auto param1 = Napi::String::New(env, _eventName);
+      auto param2 = Napi::String::New(env, _eventData);
+      std::vector<Napi::Value> args = {param1, param2};
+      function_reference.Call(args);
     }
   });
 }
@@ -108,24 +93,20 @@ void NodeIrisEventHandler::OnVideoSourceEvent(const char* event,
                                               int length) {
   std::string _eventName(event);
   std::string _eventData(data);
-  std::vector<char> stringData;
-  stringData.resize(length + 1, '\0');
-  memcpy(stringData.data(), buffer, length);
-  std::string _eventBuffer(stringData.data());
-  node_async_call::async_call([this, _eventName, _eventData, _eventBuffer] {
+  std::vector<unsigned char> vec_buffer;
+  vec_buffer.resize(length);
+  memcpy(vec_buffer.data(), buffer, length);
+  
+  node_async_call::async_call([this, _eventName, _eventData, vec_buffer, length] {
     auto it = _callbacks.find("video_source_call_back_with_buffer");
     if (it != _callbacks.end()) {
-      size_t argc = 3;
-      napi_value args[3];
-      napi_value result;
-      napi_create_string_utf8(it->second->env, _eventName.c_str(),
-                              sizeof(_eventName), &args[0]);
-      napi_create_string_utf8(it->second->env, _eventData.c_str(),
-                              sizeof(_eventData), &args[1]);
-      napi_create_string_utf8(it->second->env, _eventBuffer.c_str(),
-                              sizeof(_eventBuffer), &args[2]);
-      napi_call_function(it->second->env, it->second->global,
-                         it->second->call_back, argc, args, &result);
+      auto function_reference = it->second;
+      auto env = function_reference.Env();
+      auto param1 = Napi::String::New(env, _eventName);
+      auto param2 = Napi::String::New(env, _eventData);
+      auto param3 = Napi::ArrayBuffer::New(env, vec_buffer.data(), length);
+      std::vector<Napi::Value> args = {param1, param2, param3};
+      function_reference.Call(args);
     }
   });
 }

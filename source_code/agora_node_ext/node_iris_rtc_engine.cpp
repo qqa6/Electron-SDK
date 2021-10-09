@@ -2,7 +2,7 @@
  * @Author: zhangtao@agora.io
  * @Date: 2021-04-22 20:53:37
  * @Last Modified by: zhangtao@agora.io
- * @Last Modified time: 2021-10-09 19:33:25
+ * @Last Modified time: 2021-10-09 20:33:17
  */
 #include "node_iris_rtc_engine.h"
 #include <assert.h>
@@ -175,17 +175,15 @@ Napi::Value NodeIrisRtcEngine::CallApiWithBuffer(const Napi::CallbackInfo& info)
     RETURE_NAPI_OBJ();
 }
 
-//TODO
 Napi::Value NodeIrisRtcEngine::OnEvent(const Napi::CallbackInfo& info) {
     auto env = info.Env();
-    std::string parameter = "";
-    status = napi_get_value_utf8_string(info[0], parameter);
-   
-    napi_value cb = args[1];
+    std::string event_name = "";
+    Napi::FunctionReference function;
+    napi_get_value_utf8_string(info[0], event_name);
+    napi_get_value_function(info[1], function);
 
     if (this->_iris_engine) {
-        this->_iris_event_handler->addEvent(parameter, env, cb,
-                                                         global);
+        this->_iris_event_handler->addEvent(event_name, function);
     } else {
         LOG_F(INFO, "NodeIrisRtcEngine::OnEvent error Not Init Engine");
     }
