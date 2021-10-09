@@ -21,7 +21,7 @@
                 './source_code/window/',
                 './source_code/raw_data/video_transporter',
                 './source_code/video_source',
-                "<!(node -e \"require('nan')\")"
+                "<!@(node -p \"require('node-addon-api').include\")"
             ],
             'sources': [
                 "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/video_source/').join(' ');\")",
@@ -178,7 +178,7 @@
                 './source_code/window/',
                 './source_code/raw_data/video_transporter/',
                 './source_code/windowInfo/',
-                "<!(node -e \"require('nan')\")"
+                "<!@(node -p \"require('node-addon-api').include\")"
             ],
             'sources': [
                 "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/agora_node_ext').join(' ');\")",

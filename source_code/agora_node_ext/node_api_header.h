@@ -2,7 +2,7 @@
  * @Author: zhangtao@agora.io
  * @Date: 2021-04-22 20:53:01
  * @Last Modified by: zhangtao@agora.io
- * @Last Modified time: 2021-10-09 19:31:31
+ * @Last Modified time: 2021-10-10 00:30:11
  */
 #pragma once
 #include <node_buffer.h>
@@ -40,7 +40,7 @@ void napi_get_obj_uint32(const Napi::Object& obj, const char *key, unsigned int&
 
 void napi_get_obj_obj(const Napi::Object& obj, const char *key, Napi::Object& result);
 
-void napi_get_obj_node_buffer(const Napi::Object& obj, const char *key, void*& data, int& length);
+void napi_get_obj_node_buffer(const Napi::Object& obj, void*& data, int& length);
 }  // namespace electron
 }  // namespace rtc
 }  // namespace agora

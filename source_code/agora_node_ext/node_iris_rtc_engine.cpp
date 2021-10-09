@@ -2,7 +2,7 @@
  * @Author: zhangtao@agora.io
  * @Date: 2021-04-22 20:53:37
  * @Last Modified by: zhangtao@agora.io
- * @Last Modified time: 2021-10-09 20:33:17
+ * @Last Modified time: 2021-10-10 00:51:55
  */
 #include "node_iris_rtc_engine.h"
 #include <assert.h>
@@ -183,12 +183,12 @@ Napi::Value NodeIrisRtcEngine::OnEvent(const Napi::CallbackInfo& info) {
     napi_get_value_function(info[1], function);
 
     if (this->_iris_engine) {
-        this->_iris_event_handler->addEvent(event_name, function);
+        this->_iris_event_handler->addEvent(event_name, std::move(function));
     } else {
         LOG_F(INFO, "NodeIrisRtcEngine::OnEvent error Not Init Engine");
     }
     auto ret_value = env.Null();
-    return retValue;
+    return ret_value;
 }
 
 Napi::Value NodeIrisRtcEngine::CreateChannel(const Napi::CallbackInfo& info) {
@@ -196,8 +196,8 @@ Napi::Value NodeIrisRtcEngine::CreateChannel(const Napi::CallbackInfo& info) {
     int process_type = 0;
     std::string channel_id = "";
 
-    status = napi_get_value_int32(info[0], process_type);
-    status = napi_get_value_utf8_string(info[1], channel_id);
+    napi_get_value_int32(info[0], process_type);
+    napi_get_value_utf8_string(info[1], channel_id);
     
     //  if (nodeIrisRtcEngine->_iris_engine) {
     //    auto iris_channel = nodeIrisRtcEngine->_iris_engine->channel();
@@ -216,7 +216,7 @@ Napi::Value NodeIrisRtcEngine::GetDeviceManager(const Napi::CallbackInfo& info) 
     // NodeIrisRtcDeviceManager::Init(env);
     // napi_status status;
     // napi_value jsthis;
-    // status = napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr);
+    // napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr);
     // assert(status == napi_ok);
     
     // NodeIrisRtcEngine* nodeIrisRtcEngine;
@@ -325,7 +325,7 @@ Napi::Value NodeIrisRtcEngine::VideoSourceInitialize(const Napi::CallbackInfo& i
 
 Napi::Value NodeIrisRtcEngine::VideoSourceSetAddonLogFile(const Napi::CallbackInfo& info) {
     std::string parameter = "";
-    status = napi_get_value_utf8_string(info[0], parameter);
+    napi_get_value_utf8_string(info[0], parameter);
 
     char result[512];
     int ret = ERROR_PARAMETER_1;
@@ -368,8 +368,8 @@ int NodeIrisRtcEngine::VideoSourceRelease() {
 Napi::Value NodeIrisRtcEngine::SetAddonLogFile(const Napi::CallbackInfo& info) {
     int process_type = 0;
     std::string file_path = "";
-    status = napi_get_value_int32(info[0], process_type);
-    status = napi_get_value_utf8_string(info[1], file_path);
+    napi_get_value_int32(info[0], process_type);
+    napi_get_value_utf8_string(info[1], file_path);
     
     char result[512];
     int ret = ERROR_PARAMETER_1;
@@ -390,9 +390,9 @@ Napi::Value NodeIrisRtcEngine::PluginCallApi(const Napi::CallbackInfo& info) {
     int process_type = 0;
     int api_type = 0;
     std::string parameter = "";
-    status = napi_get_value_int32(info[0], process_type);
-    status = napi_get_value_int32(info[1], api_type);
-    status = napi_get_value_utf8_string(info[2], parameter);
+    napi_get_value_int32(info[0], process_type);
+    napi_get_value_int32(info[1], api_type);
+    napi_get_value_utf8_string(info[2], parameter);
     char result[512];
     memset(result, '\0', 512);
     LOG_F(INFO, "CallApi parameter: %s", parameter.c_str());
@@ -426,19 +426,19 @@ Napi::Value NodeIrisRtcEngine::PluginCallApi(const Napi::CallbackInfo& info) {
 
 Napi::Value NodeIrisRtcEngine::EnableVideoFrameCache(const Napi::CallbackInfo& info) {
     int process_type = 0;
-    Napi::Object obj;
+    Napi::Object frame_obj;
     napi_get_value_int32(info[0], process_type);
-    napi_get_value_obj(info[1], obj);
+    napi_get_value_obj(info[1], frame_obj);
     
     unsigned int uid = 0;
     std::string channelId = "";
     int width = 0;
     int height = 0;
     
-    napi_get_obj_uint32(obj, "uid", uid);
-    napi_get_obj_utf8_string(obj, "channelId", channelId);
-    napi_get_obj_int32(obj, "width", width);
-    napi_get_obj_int32(obj, "height", height);
+    napi_get_obj_uint32(frame_obj, "uid", uid);
+    napi_get_obj_utf8_string(frame_obj, "channelId", channelId);
+    napi_get_obj_int32(frame_obj, "width", width);
+    napi_get_obj_int32(frame_obj, "height", height);
     
     char result[512];
     memset(result, '\0', 512);
@@ -471,16 +471,16 @@ Napi::Value NodeIrisRtcEngine::EnableVideoFrameCache(const Napi::CallbackInfo& i
 
 Napi::Value NodeIrisRtcEngine::DisableVideoFrameCache(const Napi::CallbackInfo& info) {
     int process_type = 0;
-    Napi::Object obj;
+    Napi::Object frame_obj;
 
     napi_get_value_int32(info[0], process_type);
-    napi_get_value_obj(info[1], obj);
+    napi_get_value_obj(info[1], frame_obj);
 
     unsigned int uid = 0;
     std::string channelId = "";
     
-    napi_get_obj_uint32(obj, "uid", uid);
-    napi_get_obj_utf8_string(obj, "channelId", channelId);
+    napi_get_obj_uint32(frame_obj, "uid", uid);
+    napi_get_obj_utf8_string(frame_obj, "channelId", channelId);
     
     char result[512];
     memset(result, '\0', 512);
@@ -544,8 +544,8 @@ Napi::Value NodeIrisRtcEngine::GetVideoStreamData(const Napi::CallbackInfo& info
     napi_get_obj_obj(obj, "vBuffer", v_buffer_obj);
     napi_get_obj_node_buffer(v_buffer_obj, v_buffer, v_length);
     
-    napi_get_obj_uint32(env, obj, "height", height);
-    napi_get_obj_uint32(env, obj, "yStride", y_stride);
+    napi_get_obj_int32(obj, "height", height);
+    napi_get_obj_int32(obj, "yStride", y_stride);
     
     IrisRtcVideoFrame _videoFrame = IrisRtcVideoFrame_default;
     _videoFrame.y_buffer = y_buffer;
@@ -582,18 +582,18 @@ Napi::Value NodeIrisRtcEngine::GetVideoStreamData(const Napi::CallbackInfo& info
     ret_obj.Set("yStride", _videoFrame.y_stride);
     ret_obj.Set("rotation", rotation);
     ret_obj.Set("timestamp", _videoFrame.render_time_ms);
-    return retObj;
+    return ret_obj;
 }
 
 Napi::Value NodeIrisRtcEngine::Release(const Napi::CallbackInfo& info) {
     auto env = info.Env();
-    if (nodeIrisRtcEngine->_iris_engine) {
-        nodeIrisRtcEngine->_video_processer.reset();
-        nodeIrisRtcEngine->_iris_event_handler.reset();
-        nodeIrisRtcEngine->_iris_raw_data_plugin_manager = nullptr;
-        nodeIrisRtcEngine->_iris_raw_data = nullptr;
-        nodeIrisRtcEngine->_iris_engine.reset();
-        nodeIrisRtcEngine->_video_source_proxy.reset();
+    if (this->_iris_engine) {
+        this->_video_processer.reset();
+        this->_iris_event_handler.reset();
+        this->_iris_raw_data_plugin_manager = nullptr;
+        this->_iris_raw_data = nullptr;
+        this->_iris_engine.reset();
+        this->_video_source_proxy.reset();
         LOG_F(INFO, "NodeIrisRtcEngine::Release done");
     } else {
         LOG_F(INFO, "VideoSourceInitialize NodeIris Engine Not Init");

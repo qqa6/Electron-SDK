@@ -2,7 +2,7 @@
  * @Author: zhangtao@agora.io
  * @Date: 2021-04-22 20:53:44
  * @Last Modified by: zhangtao@agora.io
- * @Last Modified time: 2021-10-09 19:18:19
+ * @Last Modified time: 2021-10-09 23:12:12
  */
 #pragma once
 #include <exception>
@@ -22,7 +22,7 @@ namespace electron {
 
 class NodeIrisEventHandler;
 
-class NodeIrisRtcEngine : public Napi::ObjectWrapper<NodeIrisRtcEngine>{
+class NodeIrisRtcEngine : public Napi::ObjectWrap<NodeIrisRtcEngine>{
  public:
   explicit NodeIrisRtcEngine(const Napi::CallbackInfo& info);
   virtual ~NodeIrisRtcEngine();

@@ -41,11 +41,11 @@ void napi_get_value_obj(const Napi::Value& value, Napi::Object& result)
 
 void napi_get_value_node_buffer(const Napi::Value& value, void*& data, int& length)
 {
-  data = value.As<Napi::Buffer>().Data();
-  length = value.As<Napi::Buffer>().Length();
+  data = value.As<Napi::Buffer<unsigned char>>().Data();
+  length = value.As<Napi::Buffer<unsigned char>>().Length();
 }
 
-void napi_get_value_function(const Napi::Value& value, Napi::FunctionReference& result);
+void napi_get_value_function(const Napi::Value& value, Napi::FunctionReference& result)
 {
   result = Napi::Persistent(value.As<Napi::Function>());
 }
@@ -70,9 +70,9 @@ void napi_get_obj_obj(const Napi::Object& obj, const char *key, Napi::Object& re
   napi_get_value_obj(obj[key], result);
 }
 
-void napi_get_obj_node_buffer(const Napi::Object& obj, const char *key, void*& data, int& length)
+void napi_get_obj_node_buffer(const Napi::Object& obj, void*& data, int& length)
 {
-  napi_get_value_node_buffer(obj[key], data, length);
+  napi_get_value_node_buffer(obj, data, length);
 }
 }  // namespace electron
 }  // namespace rtc
