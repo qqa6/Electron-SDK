@@ -2,7 +2,7 @@
  * @Author: zhangtao@agora.io
  * @Date: 2021-04-22 20:53:49
  * @Last Modified by: zhangtao@agora.io
- * @Last Modified time: 2021-10-10 01:09:48
+ * @Last Modified time: 2021-10-10 11:05:14
  */
 #include "node_iris_event_handler.h"
 #include <memory.h>
@@ -55,20 +55,21 @@ void NodeIrisEventHandler::OnEvent(const char* event,
   std::vector<unsigned char> vec_buffer;
   vec_buffer.resize(length);
   memcpy(vec_buffer.data(), buffer, length);
-  
-  node_async_call::async_call([this, _eventName, _eventData, vec_buffer, length] {
-    auto it = _callbacks.find("call_back_with_buffer");
-    if (it != _callbacks.end()) {
-      auto function_reference = it->second;
-      auto env = function_reference->function.Env();
-      auto param1 = Napi::String::New(env, _eventName);
-      auto param2 = Napi::String::New(env, _eventData);
-      void *data = const_cast<unsigned char *>(&vec_buffer[0]);
-      auto param3 = Napi::ArrayBuffer::New(env, data, length);
-      const std::vector<napi_value> args = {param1, param2, param3};
-      function_reference->function.Call(args);
-    }
-  });
+
+  node_async_call::async_call(
+      [this, _eventName, _eventData, vec_buffer, length] {
+        auto it = _callbacks.find("call_back_with_buffer");
+        if (it != _callbacks.end()) {
+          auto function_reference = it->second;
+          auto env = function_reference->function.Env();
+          auto param1 = Napi::String::New(env, _eventName);
+          auto param2 = Napi::String::New(env, _eventData);
+          void* data = const_cast<unsigned char*>(&vec_buffer[0]);
+          auto param3 = Napi::ArrayBuffer::New(env, data, length);
+          const std::vector<napi_value> args = {param1, param2, param3};
+          function_reference->function.Call(args);
+        }
+      });
 }
 
 void NodeIrisEventHandler::OnVideoSourceEvent(const char* eventName,
@@ -97,20 +98,21 @@ void NodeIrisEventHandler::OnVideoSourceEvent(const char* event,
   std::vector<unsigned char> vec_buffer;
   vec_buffer.resize(length);
   memcpy(vec_buffer.data(), buffer, length);
-  
-  node_async_call::async_call([this, _eventName, _eventData, vec_buffer, length] {
-    auto it = _callbacks.find("video_source_call_back_with_buffer");
-    if (it != _callbacks.end()) {
-      auto function_reference = it->second;
-      auto env = function_reference->function.Env();
-      auto param1 = Napi::String::New(env, _eventName);
-      auto param2 = Napi::String::New(env, _eventData);
-      void *data = const_cast<unsigned char *>(&vec_buffer[0]);
-      auto param3 = Napi::ArrayBuffer::New(env, data, length);
-      const std::vector<napi_value> args = {param1, param2, param3};
-      function_reference->function.Call(args);
-    }
-  });
+
+  node_async_call::async_call(
+      [this, _eventName, _eventData, vec_buffer, length] {
+        auto it = _callbacks.find("video_source_call_back_with_buffer");
+        if (it != _callbacks.end()) {
+          auto function_reference = it->second;
+          auto env = function_reference->function.Env();
+          auto param1 = Napi::String::New(env, _eventName);
+          auto param2 = Napi::String::New(env, _eventData);
+          void* data = const_cast<unsigned char*>(&vec_buffer[0]);
+          auto param3 = Napi::ArrayBuffer::New(env, data, length);
+          const std::vector<napi_value> args = {param1, param2, param3};
+          function_reference->function.Call(args);
+        }
+      });
 }
 
 void NodeIrisEventHandler::OnVideoSourceExit() {
