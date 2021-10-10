@@ -88,7 +88,7 @@
                     'OS=="mac"',
                     {
                         'mac_framework_dirs': [
-                            '../sdk/lib/mac',
+                            '../iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs',
                             '../iris/MAC/Release',
                         ],
                         'link_settings': {
@@ -96,10 +96,13 @@
                                 'AgoraAIDenoiseExtension.framework',
                                 'AgoraCore.framework',
                                 'AgoraDav1dExtension.framework',
+                                'AgoraFDExtension.framework',
                                 'Agorafdkaac.framework',
                                 'Agoraffmpeg.framework',
+                                'AgoraJNDExtension.framework',
                                 'AgoraRtcKit.framework',
                                 'AgoraSoundTouch.framework',
+                                'AgoraVideoSegmentationExtension.framework',
                                 'AgoraRtcWrapper.framework',
                                 'av1.framework',
                                 'AppKit.framework',
@@ -107,7 +110,7 @@
                             ]
                         },
                         'include_dirs':[
-                            './sdk/lib/mac/AgoraRtcKit.framework/Headers/',
+                            './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/AgoraRtcKit.framework/Headers/',
                             './iris/MAC/Release/AgoraRtcWrapper.framework/Headers/',
                         ],
                         'sources': [
@@ -126,12 +129,12 @@
                             'MACOSX_DEPLOYMENT_TARGET': '10.11',
                             'GCC_ENABLE_CPP_RTTI': 'YES',
                             'FRAMEWORK_SEARCH_PATHS': [
-                                './sdk/lib/mac',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs',
                                 './iris/MAC/Release'
                             ],
                             "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
                             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-                            'CLANG_CXX_LIBRARY': 'libc++'
+                            # 'CLANG_CXX_LIBRARY': 'libc++'
                         },
                     }
                 ]
@@ -206,7 +209,7 @@
                             'Release': {
                                 'msvs_settings': {
                                     'VCCLCompilerTool': {
-                                        'ExceptionHandling': '1',
+                                        'ExceptionHandling': '0',
                                         'AdditionalOptions': [
                                             '/EHsc'
                                         ]
@@ -216,7 +219,7 @@
                             'Debug': {
                                 'msvs_settings': {
                                     'VCCLCompilerTool': {
-                                        'ExceptionHandling': '1',
+                                        'ExceptionHandling': '0',
                                         'AdditionalOptions': [
                                             '/EHsc'
                                         ]
@@ -231,20 +234,23 @@
                     'OS=="mac"',
                     {
                         'mac_framework_dirs': [
-                            '../sdk/lib/mac',
+                            '../iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs',
                             '../iris/MAC/Release',
                         ],
                         'copies': [{
                             'destination': '<(PRODUCT_DIR)',
                             'files': [
-                                './sdk/lib/mac/AgoraAIDenoiseExtension.framework',
-                                './sdk/lib/mac/AgoraCore.framework',
-                                './sdk/lib/mac/AgoraDav1dExtension.framework',
-                                './sdk/lib/mac/Agorafdkaac.framework',
-                                './sdk/lib/mac/Agoraffmpeg.framework',
-                                './sdk/lib/mac/AgoraRtcKit.framework',
-                                './sdk/lib/mac/AgoraSoundTouch.framework',
-                                './sdk/lib/mac/av1.framework',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/AgoraAIDenoiseExtension.framework',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/AgoraCore.framework',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/AgoraDav1dExtension.framework',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/AgoraFDExtension.framework',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/Agorafdkaac.framework',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/Agoraffmpeg.framework',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/AgoraJNDExtension.framework',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/AgoraRtcKit.framework',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/AgoraSoundTouch.framework',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/AgoraVideoSegmentationExtension.framework',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/av1.framework',
                                 './iris/MAC/Release/AgoraRtcWrapper.framework',
                                 './iris/MAC/Release/AgoraRtcScreenSharing',
                             ]
@@ -254,10 +260,13 @@
                                 'AgoraAIDenoiseExtension.framework',
                                 'AgoraCore.framework',
                                 'AgoraDav1dExtension.framework',
+                                'AgoraFDExtension.framework',
                                 'Agorafdkaac.framework',
                                 'Agoraffmpeg.framework',
+                                'AgoraJNDExtension.framework',
                                 'AgoraRtcKit.framework',
                                 'AgoraSoundTouch.framework',
+                                'AgoraVideoSegmentationExtension.framework',
                                 'AgoraRtcWrapper.framework',
                                 'av1.framework',
                                 'AppKit.framework',
@@ -270,12 +279,10 @@
                             './source_code/process/node_process_unix.cpp',
                         ],
                         'include_dirs': [
-                            './sdk/lib/mac/AgoraRtcKit.framework/Headers',
+                            './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs/AgoraRtcKit.framework/Headers',
                             './iris/MAC/Release/AgoraRtcWrapper.framework/Headers',
                         ],
                         'defines': [
-                            # '_NOEXCEPT',
-                            # '-std=c++11',
                             'IRIS_JSON_ARRAY',
                             'EXECUTABLE_OUTPUT_NAME="agora_node_ext"'
                         ],
@@ -287,10 +294,10 @@
                         'xcode_settings': {
                             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
                             'GCC_ENABLE_CPP_RTTI': 'YES',
-                            'MACOSX_DEPLOYMENT_TARGET': '10.11',
+                            'MACOSX_DEPLOYMENT_TARGET': '10.13',
                             'EXECUTABLE_EXTENSION': 'node',
                             'FRAMEWORK_SEARCH_PATHS': [
-                                './sdk/lib/mac',
+                                './iris/RTC/Agora_Native_SDK_for_Mac_FULL/libs',
                                 './iris/MAC/Release'
                             ],
                             "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
