@@ -2,7 +2,7 @@
  * @Author: zhangtao@agora.io
  * @Date: 2021-04-22 20:53:49
  * @Last Modified by: zhangtao@agora.io
- * @Last Modified time: 2021-10-10 11:05:14
+ * @Last Modified time: 2021-10-10 11:20:49
  */
 #include "node_iris_event_handler.h"
 #include <memory.h>
@@ -19,6 +19,12 @@ NodeIrisEventHandler::NodeIrisEventHandler(NodeIrisRtcEngine* engine)
 
 NodeIrisEventHandler::~NodeIrisEventHandler() {
   node_async_call::close(true);
+  for (auto it = _callbacks.begin(); it != _callbacks.end();) {
+    auto callback = it->second;
+    if (callback)
+      delete callback;
+    _callbacks.erase(it++);
+  }
   _callbacks.clear();
   _node_iris_engine = nullptr;
 }

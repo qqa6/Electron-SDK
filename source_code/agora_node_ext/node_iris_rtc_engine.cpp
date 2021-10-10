@@ -2,7 +2,7 @@
  * @Author: zhangtao@agora.io
  * @Date: 2021-04-22 20:53:37
  * @Last Modified by: zhangtao@agora.io
- * @Last Modified time: 2021-10-10 11:05:32
+ * @Last Modified time: 2021-10-10 12:07:21
  */
 #include "node_iris_rtc_engine.h"
 #include <assert.h>
@@ -70,10 +70,9 @@ Napi::Object NodeIrisRtcEngine::Init(Napi::Env env, Napi::Object exports) {
                       &NodeIrisRtcEngine::VideoSourceSetAddonLogFile),
        InstanceMethod("Release", &NodeIrisRtcEngine::Release)});
 
-  Napi::FunctionReference* constructor = new Napi::FunctionReference();
-  *constructor = Napi::Persistent(func);
-  env.SetInstanceData(constructor);
-
+  // Napi::FunctionReference* constructor = new Napi::FunctionReference();
+  // *constructor = Napi::Persistent(func);
+  // env.SetInstanceData(constructor);
   exports.Set("NodeIrisRtcEngine", func);
   return exports;
 }

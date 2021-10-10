@@ -10,15 +10,8 @@
             'include_dirs': [
                 './source_code/common',
                 './source_code/ipc',
-                './source_code/iris/rtc/cxx/include',
-                './source_code/iris/third_party/agora/iris/include',
-                './source_code/iris/third_party/agora/rtc/include',
-                './source_code/iris/third_party/libyuv/include',
-                './source_code/iris/third_party/rapidjson/include',
-                './source_code/iris/third_party/spdlog/include',
-                './source_code/iris/base',
                 './source_code/process',
-                './source_code/window/',
+                './source_code/windowInfo',
                 './source_code/raw_data/video_transporter',
                 './source_code/video_source',
                 "<!@(node -p \"require('node-addon-api').include\")"
@@ -26,13 +19,7 @@
             'sources': [
                 "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/video_source/').join(' ');\")",
                 "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/ipc/').join(' ');\")",
-                "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var i=0;return function n(){var a=t[i++];if(!a)return e;let l=path.resolve(r,a);a=r+'/'+a;let u=fs.statSync(l);if(u&&u.isDirectory()){let r=walk(a);return e=e.concat(r),n()}return e.push(a),n()}().filter(r=>!r.includes('main_'))};walk('./source_code/iris/rtc/cxx/src/').join(' ');\")",
-                "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/iris/third_party/libyuv/source/').join(' ');\")",
                 "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/raw_data/video_transporter/').join(' ');\")",
-                "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/iris/base/command/').join(' ');\")",
-                "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/iris/base/ipc/').join(' ');\")",
-                "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/iris/base/json/').join(' ');\")",
-                "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/iris/base/thread/').join(' ');\")",
                 "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/common/').join(' ');\")",
             ],
             'conditions': [
@@ -47,7 +34,7 @@
                                 '-lagora_rtc_sdk.lib',
                                 '-lws2_32.lib',
                                 '-lRpcrt4.lib',
-                                '-lgdiplus.lib'
+                                '-lgdiplus.lib',
                             ]
                         },
                         'link_settings!': [
@@ -55,15 +42,9 @@
                         ],
                         'sources': [
                             './source_code/process/node_process_win.cpp',
-                            './source_code/iris/base/process/iris_process_win.cc',
-                            './source_code/iris/base/log/iris_logger.cc',
-                            './source_code/iris/base/iris_base.cc',
-                            './source_code/iris/base/window/iris_screen_win.cc'
                         ],
                         'include_dirs': [
                             './sdk/include',
-                            './source_code/iris/base/log/iris_logger.h',
-                            './source_code/iris/base/iris_base.h',
                         ],
                         'defines': [
                             '_USING_V110_SDK71_',
@@ -107,7 +88,8 @@
                     'OS=="mac"',
                     {
                         'mac_framework_dirs': [
-                            '../sdk/lib/mac'
+                            '../sdk/lib/mac',
+                            '../iris/MAC/Release',
                         ],
                         'link_settings': {
                             'libraries': [
@@ -118,26 +100,20 @@
                                 'Agoraffmpeg.framework',
                                 'AgoraRtcKit.framework',
                                 'AgoraSoundTouch.framework',
+                                'AgoraRtcWrapper.framework',
                                 'av1.framework',
                                 'AppKit.framework',
                                 'CoreGraphics.framework',
                             ]
                         },
                         'include_dirs':[
-                            './sdk/lib/mac/AgoraRtcKit.framework/Headers',
-                            './source_code/iris/base/log/iris_logger.h',
-                            './source_code/iris/base/iris_base.h',
+                            './sdk/lib/mac/AgoraRtcKit.framework/Headers/',
+                            './iris/MAC/Release/AgoraRtcWrapper.framework/Headers/',
                         ],
                         'sources': [
                             './source_code/process/node_process_unix.cpp',
-                            './source_code/iris/base/process/iris_process_unix.cc',
-                            './source_code/iris/base/log/iris_logger.cc',
-                            './source_code/iris/base/iris_base.cc',
-                            './source_code/iris/base/window/iris_screen_mac.mm'
                         ],
                         'defines': [
-                            # '_HAS_EXCEPTIONS=0',
-                            # '-std=gnu++14',
                             'IRIS_JSON_ARRAY',
                             'EXECUTABLE_OUTPUT_NAME="VideoSource"'
                         ],
@@ -147,13 +123,15 @@
                             '-fexceptions'
                         ],
                         'xcode_settings': {
-                            'MACOSX_DEPLOYMENT_TARGET': '10.13',
+                            'MACOSX_DEPLOYMENT_TARGET': '10.11',
                             'GCC_ENABLE_CPP_RTTI': 'YES',
                             'FRAMEWORK_SEARCH_PATHS': [
-                                './sdk/lib/mac'
+                                './sdk/lib/mac',
+                                './iris/MAC/Release'
                             ],
                             "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
-                            'GCC_ENABLE_CPP_EXCEPTIONS': 'YES'
+                            'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
+                            'CLANG_CXX_LIBRARY': 'libc++'
                         },
                     }
                 ]
@@ -163,14 +141,6 @@
             'target_name': 'agora_node_ext',
             'cflags_cc!': ['-fno-rtti'],
             'include_dirs': [
-                './source_code/iris/rtc/cxx/include',
-                './source_code/iris/rtc/cxx/include/internal',
-                './source_code/iris/third_party/agora/iris/include',
-                './source_code/iris/third_party/agora/rtc/include',
-                './source_code/iris/third_party/libyuv/include',
-                './source_code/iris/third_party/rapidjson/include',
-                './source_code/iris/third_party/spdlog/include',
-                './source_code/iris/base',
                 './source_code/agora_node_ext',
                 './source_code/common/',
                 './source_code/ipc/',
@@ -183,14 +153,8 @@
             'sources': [
                 "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/agora_node_ext').join(' ');\")",
                 "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/ipc').join(' ');\")",
-                "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var i=0;return function n(){var a=t[i++];if(!a)return e;let l=path.resolve(r,a);a=r+'/'+a;let u=fs.statSync(l);if(u&&u.isDirectory()){let r=walk(a);return e=e.concat(r),n()}return e.push(a),n()}().filter(r=>!r.includes('main_'))};walk('./source_code/iris/rtc/cxx/src/').join(' ');\")",
-                "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/iris/third_party/libyuv/source/').join(' ');\")",
                 "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/raw_data/video_transporter/').join(' ');\")",
-                "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/iris/base/command/').join(' ');\")",
-                "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/iris/base/ipc/').join(' ');\")",
-                "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/iris/base/json/').join(' ');\")",
                 "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/common/').join(' ');\")",
-                "<!@(node -p \"var fs=require('fs'),path=require('path'),walk=function(r){let t,e=[],n=null;try{t=fs.readdirSync(r)}catch(r){n=r.toString()}if(n)return n;var a=0;return function n(){var i=t[a++];if(!i)return e;let u=path.resolve(r,i);i=r+'/'+i;let c=fs.statSync(u);if(c&&c.isDirectory()){let r=walk(i);return e=e.concat(r),n()}return e.push(i),n()}()};walk('./source_code/iris/base/thread/').join(' ');\")",
             ],
             'conditions': [
                 [
@@ -232,23 +196,17 @@
                         'sources': [
                             './source_code/process/node_process_win.cpp',
                             './source_code/windowInfo/node_screen_window_info_win.cpp',
-                            './source_code/windowInfo/node_screen_window_info.h',
-                            './source_code/iris/base/process/iris_process_win.cc',
-                            './source_code/iris/base/log/iris_logger.cc',
-                            './source_code/iris/base/iris_base.cc',
-                            './source_code/iris/base/window/iris_screen_win.cc'
+                            './source_code/windowInfo/node_screen_window_info.h'
                         ],
                         'include_dirs': [
                             './sdk/include',
-                            './extra/internal',
-                            './source_code/iris/base/log/iris_logger.h',
-                            './source_code/iris/base/iris_base.h',
+                            './extra/internal'
                         ],
                         'configurations': {
                             'Release': {
                                 'msvs_settings': {
                                     'VCCLCompilerTool': {
-                                        'ExceptionHandling': '0',
+                                        'ExceptionHandling': '1',
                                         'AdditionalOptions': [
                                             '/EHsc'
                                         ]
@@ -258,7 +216,7 @@
                             'Debug': {
                                 'msvs_settings': {
                                     'VCCLCompilerTool': {
-                                        'ExceptionHandling': '0',
+                                        'ExceptionHandling': '1',
                                         'AdditionalOptions': [
                                             '/EHsc'
                                         ]
@@ -273,7 +231,8 @@
                     'OS=="mac"',
                     {
                         'mac_framework_dirs': [
-                            '../sdk/lib/mac'
+                            '../sdk/lib/mac',
+                            '../iris/MAC/Release',
                         ],
                         'copies': [{
                             'destination': '<(PRODUCT_DIR)',
@@ -285,7 +244,9 @@
                                 './sdk/lib/mac/Agoraffmpeg.framework',
                                 './sdk/lib/mac/AgoraRtcKit.framework',
                                 './sdk/lib/mac/AgoraSoundTouch.framework',
-                                './sdk/lib/mac/av1.framework'
+                                './sdk/lib/mac/av1.framework',
+                                './iris/MAC/Release/AgoraRtcWrapper.framework',
+                                './iris/MAC/Release/AgoraRtcScreenSharing',
                             ]
                         }],
                         'link_settings': {
@@ -297,6 +258,7 @@
                                 'Agoraffmpeg.framework',
                                 'AgoraRtcKit.framework',
                                 'AgoraSoundTouch.framework',
+                                'AgoraRtcWrapper.framework',
                                 'av1.framework',
                                 'AppKit.framework',
                                 'CoreGraphics.framework',
@@ -306,19 +268,10 @@
                             './source_code/windowInfo/node_screen_window_info_mac.cpp',
                             './source_code/windowInfo/node_screen_window_info.h',
                             './source_code/process/node_process_unix.cpp',
-                            './source_code/iris/base/window/iris_screen_mac.mm',
-                            './source_code/iris/base/process/iris_process_unix.cc',
-                            # './source_code/iris/third_party/libyuv/source/compare_gcc.cc',
-                            # './source_code/iris/third_party/libyuv/source/rotate_gcc.cc',
-                            # './source_code/iris/third_party/libyuv/source/row_gcc.cc',
-                            './source_code/iris/base/log/iris_logger.cc',
-                            './source_code/iris/base/iris_base.cc',
-                            # './source_code/iris/third_party/libyuv/source/scale_gcc.cc'
                         ],
                         'include_dirs': [
                             './sdk/lib/mac/AgoraRtcKit.framework/Headers',
-                            './source_code/iris/base/log/iris_logger.h',
-                            './source_code/iris/base/iris_base.h',
+                            './iris/MAC/Release/AgoraRtcWrapper.framework/Headers',
                         ],
                         'defines': [
                             # '_NOEXCEPT',
@@ -337,9 +290,10 @@
                             'MACOSX_DEPLOYMENT_TARGET': '10.11',
                             'EXECUTABLE_EXTENSION': 'node',
                             'FRAMEWORK_SEARCH_PATHS': [
-                                './sdk/lib/mac'
+                                './sdk/lib/mac',
+                                './iris/MAC/Release'
                             ],
-                            "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym"
+                            "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
                         },
                     }
                 ]
